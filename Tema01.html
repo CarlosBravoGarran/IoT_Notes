@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT – Tema 1: Introducción y Arquitectura</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6357/6357665.png">
+
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+    :root {
+        --bg: #F5F2EC;
+        --surface: #FFFEF9;
+        --surface2: #EDE9E0;
+        --ink: #1A1814;
+        --ink2: #4A4640;
+        --ink3: #8A857D;
+        --accent: #C4380A;
+        --accent2: #1A5C8A;
+        --accent3: #2E7D52;
+        --accent4: #7C4A1A;
+        --border: rgba(26,24,20,0.12);
+        --border-strong: rgba(26,24,20,0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Source Serif 4', Georgia, serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.7;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: var(--ink);
+        color: var(--bg);
+        padding: 3rem 4rem 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: 'T1';
+        font-family: 'Syne', sans-serif;
+        font-size: 18rem;
+        font-weight: 800;
+        position: absolute;
+        right: -1rem;
+        top: -3rem;
+        color: rgba(255,255,255,0.04);
+        line-height: 1;
+        pointer-events: none;
+    }
+
+    .subject-tag {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: rgba(196,56,10,0.15);
+        border: 1px solid rgba(196,56,10,0.3);
+        padding: 3px 10px;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: #FFFEF9;
+    }
+
+    .subtitle {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        color: rgba(255,254,249,0.5);
+        margin-top: 0.75rem;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+    }
+
+    /* Section headers */
+    .section-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    h2 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        margin-bottom: 1.25rem;
+    }
+
+    h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 0.6rem;
+    }
+
+    p { margin-bottom: 0.8rem; color: var(--ink2); }
+    p:last-child { margin-bottom: 0; }
+
+    /* Section spacing */
+    .section { margin-bottom: 3.5rem; }
+
+    /* Architecture cards – the big 4 */
+    .arch-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: var(--border-strong);
+        border: 1px solid var(--border-strong);
+        margin-bottom: 2rem;
+    }
+
+    .arch-card {
+        background: var(--surface);
+        padding: 1.5rem 1.75rem;
+        position: relative;
+    }
+
+    .arch-card-num {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--ink3);
+        margin-bottom: 0.5rem;
+    }
+
+    .arch-card h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .arch-card.dispositivo h3 { color: var(--accent); }
+    .arch-card.comunicacion h3 { color: var(--accent2); }
+    .arch-card.pasarela h3 { color: var(--accent3); }
+    .arch-card.plataforma h3 { color: var(--accent4); }
+
+    .arch-card ul {
+        list-style: none;
+        font-size: 14px;
+        color: var(--ink2);
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .arch-card ul li {
+        padding: 3px 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+    .arch-card ul li:last-child { border-bottom: none; }
+
+    .arch-card ul li::before {
+        content: '›';
+        font-size: 16px;
+        line-height: 1;
+        color: var(--ink3);
+        flex-shrink: 0;
+    }
+
+    /* Flow diagram – computing layers */
+    .layer-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background: var(--border-strong);
+        border: 1px solid var(--border-strong);
+        margin-bottom: 2rem;
+        font-family: 'Syne', sans-serif;
+    }
+
+    .layer {
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .layer-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .layer-desc {
+        font-family: 'Source Serif 4', serif;
+        font-size: 13px;
+        color: var(--ink2);
+        max-width: 480px;
+        line-height: 1.5;
+        font-style: italic;
+    }
+
+    .layer.edge { background: var(--surface); }
+    .layer.fog { background: #EEF3F8; }
+    .layer.cloud { background: #E8F0FB; }
+
+    .layer.edge .layer-name { color: var(--accent3); }
+    .layer.fog .layer-name { color: var(--accent2); }
+    .layer.cloud .layer-name { color: #1A5C8A; }
+
+    .layer-badge {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border: 1px solid currentColor;
+        flex-shrink: 0;
+    }
+
+    /* Platform blocks */
+    .platform-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .platform-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 1rem 1.1rem;
+    }
+
+    .platform-block-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0.4rem;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 0.4rem;
+        display: inline-block;
+    }
+
+    .platform-block p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Protocol comparison table */
+    .proto-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+        margin-bottom: 2rem;
+    }
+
+    .proto-table th {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 2px solid var(--ink);
+        background: var(--surface2);
+    }
+
+    .proto-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--ink2);
+        vertical-align: top;
+    }
+
+    .proto-table tr:nth-child(even) td { background: var(--surface); }
+
+    .proto-table td:first-child {
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 500;
+        color: var(--accent2);
+        white-space: nowrap;
+    }
+
+    /* Applications grid */
+    .app-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .app-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 0.9rem 1rem;
+        text-align: center;
+    }
+
+    .app-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .app-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0.3rem;
+    }
+
+    .app-pct {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        color: var(--accent);
+        font-weight: 500;
+    }
+
+    /* Key concepts box */
+    .key-box {
+        background: var(--ink);
+        color: var(--bg);
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .key-box-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+    }
+
+    .key-box ul {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px 2rem;
+    }
+
+    .key-box ul li {
+        font-size: 14px;
+        color: rgba(245,242,236,0.85);
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+    }
+
+    .key-box ul li::before {
+        content: '—';
+        color: var(--accent);
+        flex-shrink: 0;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Divider */
+    .divider {
+        border: none;
+        border-top: 1px solid var(--border-strong);
+        margin: 2.5rem 0;
+    }
+
+    /* Exam alert */
+    .exam-box {
+        background: #FEF5ED;
+        border: 1.5px solid #E8A055;
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .exam-box-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .exam-box p {
+        font-size: 14px;
+        color: var(--ink2);
+        margin-bottom: 0.4rem;
+    }
+
+    strong {
+        font-weight: 600;
+        color: var(--ink);
+        font-style: normal;
+    }
+
+    em {
+        font-style: italic;
+        color: var(--ink2);
+    }
+
+    /* Footer */
+    .page-footer {
+        background: var(--surface2);
+        border-top: 1px solid var(--border-strong);
+        padding: 1.5rem 4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        color: var(--ink3);
+    }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>Introducción y<br>Arquitectura IoT</h1>
+  <p class="subtitle">Tema 1 &nbsp;·&nbsp; Conceptos fundamentales, capas y paradigmas de computación</p>
+</header>
+
+<div class="container">
+
+  <!-- EXAM ALERT -->
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Pregunta frecuente de examen</div>
+    <p>Saber <strong>clasificar elementos en Dispositivo / Comunicación / Pasarela / Plataforma</strong> es pregunta directa de teoría. También: diferencia <strong>Edge vs. Fog vs. Cloud computing</strong>.</p>
+  </div>
+
+  <!-- SECTION 1: Arquitectura IoT -->
+  <div class="section">
+    <div class="section-label">01 — Arquitectura de una solución IoT</div>
+    <h2>Los 4 bloques fundamentales</h2>
+    <p>Una solución IoT completa siempre se organiza en cuatro capas funcionales. Memorizar qué elementos pertenecen a cada capa es esencial para el examen.</p>
+
+    <div class="arch-grid">
+      <div class="arch-card dispositivo">
+        <div class="arch-card-num">01 / Dispositivo</div>
+        <h3>Dispositivos ("Things")</h3>
+        <p style="font-size:13px;margin-bottom:0.75rem;color:var(--ink2);">Sensores y actuadores físicos. Nodos que interactúan con el mundo físico.</p>
+        <ul>
+          <li>Embedded Device / System</li>
+          <li>Sensor</li>
+          <li>Actuador / Relay / Servo Motor</li>
+          <li>Termostato, cámara, iBeacon</li>
+          <li>Intelligent mousetraps</li>
+          <li>GSMchips</li>
+        </ul>
+      </div>
+
+      <div class="arch-card comunicacion">
+        <div class="arch-card-num">02 / Comunicación</div>
+        <h3>Protocolos de comunicación</h3>
+        <p style="font-size:13px;margin-bottom:0.75rem;color:var(--ink2);">Cómo los datos viajan desde el dispositivo hacia la plataforma.</p>
+        <ul>
+          <li>Zigbee / Bluetooth / Wi-Fi</li>
+          <li>LoRaWAN / GSM</li>
+          <li>MQTT / CoAP / AMQP</li>
+          <li>REST API</li>
+          <li>Message Router</li>
+        </ul>
+      </div>
+
+      <div class="arch-card pasarela">
+        <div class="arch-card-num">03 / Pasarela</div>
+        <h3>Gateway (Puertas de enlace)</h3>
+        <p style="font-size:13px;margin-bottom:0.75rem;color:var(--ink2);">Traducen redes no-IP a protocolos IP. Doble conectividad.</p>
+        <ul>
+          <li>Message Broker (K)</li>
+          <li>Device Manager</li>
+          <li>GSM + Bluetooth</li>
+          <li>Wi-Fi + XBee</li>
+          <li>LoRaWAN + Ethernet</li>
+        </ul>
+      </div>
+
+      <div class="arch-card plataforma">
+        <div class="arch-card-num">04 / Plataforma</div>
+        <h3>Plataforma IoT</h3>
+        <p style="font-size:13px;margin-bottom:0.75rem;color:var(--ink2);">Orquestador en la nube. Almacena, procesa y expone datos.</p>
+        <ul>
+          <li>Storage and Data Management</li>
+          <li>Rule Engine</li>
+          <li>REST API / Microservices</li>
+          <li>Visualización</li>
+          <li>Device Manager (L)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: Paradigmas de computación -->
+  <div class="section">
+    <div class="section-label">02 — Paradigmas de computación distribuida</div>
+    <h2>Edge · Fog · Cloud</h2>
+    <p>Tres paradigmas complementarios que forman una jerarquía. El examen pregunta sus diferencias y casos de uso.</p>
+
+    <div class="layer-stack">
+      <div class="layer cloud">
+        <div>
+          <div class="layer-name">☁ Cloud Computing</div>
+          <div class="layer-desc">Centros de datos centralizados en cualquier parte del mundo. Almacenamiento masivo, análisis de big data, aplicaciones empresariales generales. Mayor latencia.</div>
+        </div>
+        <span class="layer-badge" style="color:var(--accent2);">Lejano · Centralizado</span>
+      </div>
+      <div class="layer fog">
+        <div>
+          <div class="layer-name">🌫 Fog Computing</div>
+          <div class="layer-desc">Capa intermedia entre Edge y Cloud. Nodos de niebla (dispositivos, servidores, gateways) ubicados en la red local. Automatización industrial, smart cities. Computa dentro de la red de área local.</div>
+        </div>
+        <span class="layer-badge" style="color:var(--accent2);">Intermedio · Red local</span>
+      </div>
+      <div class="layer edge">
+        <div>
+          <div class="layer-name">⚡ Edge Computing</div>
+          <div class="layer-desc">Procesamiento directamente en el dispositivo IoT o muy cerca de él. Decisiones en tiempo real, baja latencia. Datos computados en el sensor, sin trasladarse. Conserva toda la información localmente.</div>
+        </div>
+        <span class="layer-badge" style="color:var(--accent3);">Cercano · Tiempo real</span>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.2rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Diferencia clave: Fog vs Edge</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:13.5px;">
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);">FOG</strong>
+          <ul style="list-style:none;padding-top:0.4rem;">
+            <li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--ink2);">Desplaza operaciones a nodos de niebla en la red local</li>
+            <li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--ink2);">Computa dentro de la red de área local</li>
+            <li style="padding:3px 0;color:var(--ink2);">Puede gestionar más información en intervalos de tiempo</li>
+          </ul>
+        </div>
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent3);">EDGE</strong>
+          <ul style="list-style:none;padding-top:0.4rem;">
+            <li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--ink2);">Ocurre directamente en el dispositivo IoT</li>
+            <li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--ink2);">Sin trasladarse a centros de datos o nube</li>
+            <li style="padding:3px 0;color:var(--ink2);">Conserva datos y cálculo donde se generó</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Componentes de la plataforma -->
+  <div class="section">
+    <div class="section-label">03 — Componentes de una plataforma IoT</div>
+    <h2>Bloques funcionales de la plataforma</h2>
+    <p>La plataforma IoT (instalada en la nube / VPS Linux) organiza el procesamiento en módulos especializados interconectados por un bus de mensajes.</p>
+
+    <div class="platform-grid">
+      <div class="platform-block">
+        <div class="platform-block-title">Interfaz periférica / Message Broker</div>
+        <p>Se comunica con dispositivos heterogéneos (Wi-Fi, Bluetooth, LoRaWAN). Consolida datos en el bus de mensajes. Actúa como coordinador central.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Message Router / Comunicaciones</div>
+        <p>Enriquece mensajes, convierte formatos (CSV→JSON, binario→texto), deduplica paquetes y controla el flujo en el bus.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Storage — Series temporales</div>
+        <p>Almacena datos secuencialmente. Para almacenamiento provisional; no pensado para conjuntos de datos muy grandes.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Rule Engine</div>
+        <p>Supervisa el bus y ejecuta acciones basadas en reglas. Ejemplo: "enviar alerta cuando el paquete contenga X". Activado por eventos.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">REST API</div>
+        <p>Para funciones que no necesitan tiempo real. Sensores con lectura cada 15 min usan REST. Puede activar reglas y flujos de trabajo.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Microservices</div>
+        <p>Notificaciones, autenticación, pagos, captcha, etc. Agrupados y empaquetados para reutilización dentro y fuera de la plataforma.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Device Manager</div>
+        <p>Gestiona 50+ dispositivos: estado activo/inactivo, nivel batería, actualizaciones OTA, derechos de acceso, sesiones.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">App & User Manager</div>
+        <p>Contraseñas, credenciales, API keys, derechos de acceso para aplicaciones y usuarios upstream.</p>
+      </div>
+      <div class="platform-block">
+        <div class="platform-block-title">Fog / Edge nodes</div>
+        <p>Nodos físicos/virtuales de datos, nodos de niebla (dispositivos, servidores, gateways), servicios de supervisión, procesadores y gestor de recursos.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Protocolos -->
+  <div class="section">
+    <div class="section-label">04 — Protocolos IoT por capa OSI</div>
+    <h2>Stack de protocolos</h2>
+    <p>Los protocolos IoT permiten la comunicación entre dispositivos y servidores. Organizados por capa de red:</p>
+
+    <table class="proto-table">
+      <thead>
+        <tr>
+          <th>Protocolo</th>
+          <th>Capa</th>
+          <th>Descripción</th>
+          <th>Uso típico en IoT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>802.11 Wi-Fi</td>
+          <td>Enlace</td>
+          <td>LAN inalámbrica. Bandas 2.4/5/60 GHz.</td>
+          <td>Dispositivos domésticos, gateways</td>
+        </tr>
+        <tr>
+          <td>Zigbee / 802.15.4</td>
+          <td>Enlace</td>
+          <td>LR-WPAN. Bajo costo y baja velocidad. Base de Zigbee, 6LoWPAN.</td>
+          <td>Sensores de baja potencia</td>
+        </tr>
+        <tr>
+          <td>LoRaWAN</td>
+          <td>Enlace</td>
+          <td>Long Range. Gran alcance, bajo consumo (LPWAN).</td>
+          <td>Sensores remotos, agricultura</td>
+        </tr>
+        <tr>
+          <td>Bluetooth / BLE</td>
+          <td>Enlace</td>
+          <td>Corto alcance. BLE = muy bajo consumo.</td>
+          <td>Wearables, iBeacon, teléfonos como gateway</td>
+        </tr>
+        <tr>
+          <td>GSM / 2G-4G</td>
+          <td>Enlace</td>
+          <td>Redes celulares. Amplia cobertura.</td>
+          <td>Dispositivos remotos con SIM</td>
+        </tr>
+        <tr>
+          <td>IPv4 / IPv6</td>
+          <td>Red</td>
+          <td>IPv4: 32 bits. IPv6: 128 bits (3.4×10³⁸ dir.).</td>
+          <td>Identificación y enrutamiento</td>
+        </tr>
+        <tr>
+          <td>6LoWPAN</td>
+          <td>Red</td>
+          <td>IPv6 sobre redes de baja potencia. Dispositivos restringidos.</td>
+          <td>Sensores con IPv6</td>
+        </tr>
+        <tr>
+          <td>TCP / UDP</td>
+          <td>Transporte</td>
+          <td>TCP = fiable, orientado conexión. UDP = sin conexión, más ligero.</td>
+          <td>TCP para MQTT; UDP para CoAP</td>
+        </tr>
+        <tr>
+          <td>MQTT</td>
+          <td>Aplicación</td>
+          <td>Pub/sub extremadamente ligero. Sobre TCP. QoS 0/1/2.</td>
+          <td>Sensores con conexión limitada</td>
+        </tr>
+        <tr>
+          <td>CoAP</td>
+          <td>Aplicación</td>
+          <td>REST sobre UDP para dispositivos restringidos. Similar a HTTP pero 10x más pequeño.</td>
+          <td>M2M, nodos de baja potencia</td>
+        </tr>
+        <tr>
+          <td>AMQP</td>
+          <td>Aplicación</td>
+          <td>Cola de mensajes. Componentes rígidos para mensajería empresarial.</td>
+          <td>Plataformas empresariales</td>
+        </tr>
+        <tr>
+          <td>HTTP / REST</td>
+          <td>Aplicación</td>
+          <td>Cliente-servidor. Sin estado. Base de Internet.</td>
+          <td>APIs de plataforma, polling periódico</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Aplicaciones principales -->
+  <div class="section">
+    <div class="section-label">05 — Principales aplicaciones IoT</div>
+    <h2>Sectores de aplicación (2020)</h2>
+
+    <div class="app-grid">
+      <div class="app-card">
+        <span class="app-icon">🏭</span>
+        <div class="app-name">Industria / IIoT</div>
+        <div class="app-pct">22%</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🚗</span>
+        <div class="app-name">Transporte</div>
+        <div class="app-pct">15%</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">⚡</span>
+        <div class="app-name">Energía</div>
+        <div class="app-pct">14%</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🛒</span>
+        <div class="app-name">Retail</div>
+        <div class="app-pct">—</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🏥</span>
+        <div class="app-name">Salud</div>
+        <div class="app-pct">—</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🏙️</span>
+        <div class="app-name">Smart City</div>
+        <div class="app-pct">—</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🏠</span>
+        <div class="app-name">Smart Home</div>
+        <div class="app-pct">—</div>
+      </div>
+      <div class="app-card">
+        <span class="app-icon">🌾</span>
+        <div class="app-name">Agricultura</div>
+        <div class="app-pct">—</div>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <div class="key-box-label">conceptos clave IIoT (Internet Industrial de las Cosas)</div>
+      <ul>
+        <li>Fábrica digital / conectada</li>
+        <li>Gestión de instalaciones y mantenimiento predictivo</li>
+        <li>Control del flujo de producción</li>
+        <li>Gestión del inventario</li>
+        <li>Seguridad y protección de planta</li>
+        <li>Optimización del empaquetado</li>
+        <li>Optimización de la cadena de suministro</li>
+        <li>Vehículos autónomos y flotas</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Componentes de un dispositivo IoT -->
+  <div class="section">
+    <div class="section-label">06 — Anatomía de un dispositivo IoT</div>
+    <h2>Componentes clave de un dispositivo</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border-strong);border:1px solid var(--border-strong);margin-bottom:1.5rem;">
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">Sensores y Actuadores</h3>
+        <p style="font-size:13px;">Sensores captan datos del entorno (temperatura, movimiento, luz) → señales eléctricas. Actuadores transforman señales eléctricas → acciones físicas.</p>
+      </div>
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">CPU</h3>
+        <p style="font-size:13px;">Cerebro del dispositivo. Procesa datos de sensores, toma decisiones, gestiona memoria y comunicación.</p>
+      </div>
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">Memoria</h3>
+        <p style="font-size:13px;">RAM + almacenamiento persistente. En dispositivos IoT típicos: 5 kB a cientos de MB. Extremadamente limitada.</p>
+      </div>
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">Interfaz de comunicación</h3>
+        <p style="font-size:13px;">Permite conexión a internet u otros dispositivos. Wi-Fi, Bluetooth, celular, etc. A veces un gateway hace este trabajo.</p>
+      </div>
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">Unidad de alimentación</h3>
+        <p style="font-size:13px;">Suministra energía. Crítica en IoT: muchos dispositivos funcionan con baterías → bajo consumo es prioridad de diseño.</p>
+      </div>
+      <div style="background:var(--surface);padding:1.1rem 1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.5rem;">Gateway (cuando es necesario)</h3>
+        <p style="font-size:13px;">No todos los dispositivos tienen conectividad IP directa. El gateway conecta redes no-IP (Bluetooth, Zigbee) con redes WAN/Internet.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 1 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>

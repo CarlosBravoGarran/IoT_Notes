@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT – Tema 2: Sistemas Embebidos, Sensores y Actuadores</title>
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6357/6357665.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #F0F4F2;
+    --surface: #FAFCFB;
+    --surface2: #E3EAE6;
+    --ink: #141A17;
+    --ink2: #3D4A43;
+    --ink3: #7A8A80;
+    --accent: #1A6B4A;
+    --accent2: #0F4A8A;
+    --accent3: #B5430A;
+    --accent4: #6B1A6B;
+    --border: rgba(20,26,23,0.1);
+    --border-strong: rgba(20,26,23,0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    background: #141A17;
+    color: #F0F4F2;
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: 'T2';
+    font-family: 'Syne', sans-serif;
+    font-size: 18rem;
+    font-weight: 800;
+    position: absolute;
+    right: -1rem;
+    top: -3rem;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .subject-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #4ACA8A;
+    background: rgba(74,202,138,0.12);
+    border: 1px solid rgba(74,202,138,0.3);
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: #F0F4F2;
+  }
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: rgba(240,244,242,0.45);
+    margin-top: 0.75rem;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+  p { margin-bottom: 0.8rem; color: var(--ink2); }
+  p:last-child { margin-bottom: 0; }
+  .section { margin-bottom: 3.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border-strong); margin: 2.5rem 0; }
+
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; color: var(--ink2); }
+
+  /* Exam box */
+  .exam-box {
+    background: #FEF5ED;
+    border: 1.5px solid #E8A055;
+    border-left: 4px solid var(--accent3);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .exam-box-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent3);
+    margin-bottom: 0.5rem;
+  }
+  .exam-box p { font-size: 14px; color: var(--ink2); margin-bottom: 0.4rem; }
+
+  /* 2-col grid cards */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .grid-card { background: var(--surface); padding: 1.3rem 1.5rem; }
+  .grid-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .grid-card p { font-size: 13.5px; }
+
+  /* Plataformas comparison */
+  .plataforma-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .plataforma-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.3rem;
+    position: relative;
+  }
+  .plataforma-card::before {
+    content: attr(data-tag);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .plataforma-card.raspi::before { color: var(--accent); }
+  .plataforma-card.arduino::before { color: var(--accent2); }
+  .plataforma-card.esp32::before { color: var(--accent3); }
+  .plataforma-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .plataforma-card ul { list-style: none; font-size: 13px; color: var(--ink2); }
+  .plataforma-card ul li { padding: 3px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; align-items: baseline; }
+  .plataforma-card ul li:last-child { border-bottom: none; }
+  .plataforma-card ul li::before { content: '›'; color: var(--ink3); flex-shrink: 0; }
+  .tag-good { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; background: rgba(26,107,74,0.1); color: var(--accent); border: 1px solid rgba(26,107,74,0.25); margin-top: 0.5rem; margin-right: 4px; }
+  .tag-bad { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; background: rgba(181,67,10,0.1); color: var(--accent3); border: 1px solid rgba(181,67,10,0.25); margin-top: 0.5rem; margin-right: 4px; }
+
+  /* GPIO table */
+  .gpio-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .gpio-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .gpio-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .gpio-table tr:nth-child(even) td { background: var(--surface); }
+  .gpio-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent2); white-space: nowrap; }
+
+  /* Sensor classification visual */
+  .sensor-tree {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+  }
+  .tree-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-start; }
+  .tree-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    min-width: 120px;
+    padding-top: 5px;
+    flex-shrink: 0;
+  }
+  .tree-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border: 1px solid;
+    display: inline-block;
+  }
+  .pill.magnitud { border-color: rgba(26,107,74,0.4); color: var(--accent); background: rgba(26,107,74,0.06); }
+  .pill.fuente { border-color: rgba(15,74,138,0.4); color: var(--accent2); background: rgba(15,74,138,0.06); }
+  .pill.senal { border-color: rgba(107,26,107,0.4); color: var(--accent4); background: rgba(107,26,107,0.06); }
+  .pill.principio { border-color: rgba(181,67,10,0.4); color: var(--accent3); background: rgba(181,67,10,0.06); }
+
+  /* Sensor/Actuator examples big grid */
+  .sensor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .sensor-card { background: var(--surface); border: 1px solid var(--border); padding: 1.1rem 1.3rem; }
+  .sensor-card-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 0.6rem; }
+  .sensor-card-type { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); }
+  .sensor-card h3 { font-size: 0.9rem; margin-bottom: 0; }
+  .sensor-card ul { list-style: none; font-size: 13px; color: var(--ink2); margin-top: 0.5rem; }
+  .sensor-card ul li { padding: 2px 0; display: flex; gap: 6px; }
+  .sensor-card ul li::before { content: '·'; color: var(--ink3); flex-shrink: 0; }
+  .model-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; background: var(--surface2); border: 1px solid var(--border-strong); padding: 2px 7px; display: inline-block; margin-top: 5px; margin-right: 4px; color: var(--ink2); }
+
+  /* Actuator classification */
+  .act-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .act-card { background: var(--surface); padding: 1.1rem 1.3rem; }
+  .act-card-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .act-card.electrico .act-card-label { color: var(--accent); }
+  .act-card.neumatico .act-card-label { color: var(--accent2); }
+  .act-card.hidraulico .act-card-label { color: var(--accent3); }
+  .act-card h3 { font-size: 0.9rem; margin-bottom: 0.4rem; }
+  .act-card p { font-size: 13px; }
+
+  /* ARM families */
+  .arm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .arm-card { background: var(--surface); border-top: 3px solid; padding: 1.1rem 1.3rem; }
+  .arm-card.cortex-a { border-color: var(--accent); }
+  .arm-card.cortex-r { border-color: var(--accent2); }
+  .arm-card.cortex-m { border-color: var(--accent3); }
+  .arm-card h3 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .arm-card p { font-size: 13px; }
+
+  /* ADC comparison */
+  .adc-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .adc-cell { background: var(--surface); padding: 1rem 1.2rem; }
+  .adc-name { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 13px; color: var(--accent2); margin-bottom: 0.3rem; }
+  .adc-cell p { font-size: 13px; }
+
+  /* Key box dark */
+  .key-box { background: var(--ink); color: var(--bg); padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .key-box-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #4ACA8A; margin-bottom: 0.75rem; }
+  .key-box ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 2rem; }
+  .key-box ul li { font-size: 14px; color: rgba(240,244,242,0.85); display: flex; gap: 8px; align-items: baseline; }
+  .key-box ul li::before { content: '—'; color: #4ACA8A; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  .page-footer { background: var(--surface2); border-top: 1px solid var(--border-strong); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); }
+
+  /* Selector criteria */
+  .criteria-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .criteria-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 1rem 1.2rem; }
+  .criteria-card h3 { font-size: 0.88rem; color: var(--accent); margin-bottom: 0.4rem; font-family: 'IBM Plex Mono', monospace; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .criteria-card p { font-size: 13px; }
+
+  /* Protocol pins */
+  .pins-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .pins-card { background: var(--surface); border: 1px solid var(--border); padding: 1.1rem 1.3rem; }
+  .pins-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+  .pins-card ul { list-style: none; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink2); }
+  .pins-card ul li { padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .pins-card ul li:last-child { border-bottom: none; }
+  .pin-name { color: var(--accent2); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>Sistemas Embebidos,<br>Sensores y Actuadores</h1>
+  <p class="subtitle">Tema 2 &nbsp;·&nbsp; Dispositivos IoT, plataformas de desarrollo, GPIO, sensores y actuadores</p>
+</header>
+
+<div class="container">
+
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Lo que pregunta el profe (del PDF)</div>
+    <p>Clasificar elementos como <strong>actuador o sensor</strong>: Relay, Reed Switch, Dispositivo Paso a Paso, Fototransistor, Servo Motor, Display, Estimador de Distancia, Solenoide, Giróscopo, LDR.</p>
+    <p>Conocer <strong>GPIO, UART, I2C, SPI</strong> y sus pines. <strong>PWM</strong> (pines 12, 13, 18, 19 son los mejores en Raspi). Diferencias <strong>Arduino vs Raspberry Pi vs ESP32</strong>.</p>
+  </div>
+
+  <!-- SECTION 1: Sistema embebido -->
+  <div class="section">
+    <div class="section-label">01 — Qué es un sistema embebido</div>
+    <h2>Sistema embebido (Embedded System)</h2>
+    <p>Sistema de computación compuesto por hardware y software diseñado para realizar <strong>una o pocas funciones específicas</strong> dentro de un sistema más grande. A diferencia de una computadora de propósito general, está optimizado para una tarea concreta.</p>
+
+    <div class="two-col">
+      <div class="grid-card">
+        <h3>Características principales</h3>
+        <ul style="list-style:none;font-size:13.5px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Función dedicada — no multifuncional</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Hardware y software "embebidos" dentro del dispositivo</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Diseño específico: consumo, tamaño, tiempo real, coste</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Microprocesador/microcontrolador + memoria + periféricos</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Pueden no tener SO de propósito general</li>
+        </ul>
+      </div>
+      <div class="grid-card">
+        <h3>Eficiencia — factores clave</h3>
+        <ul style="list-style:none;font-size:13.5px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Eficiencia energética</strong> — prolongar batería</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Uso optimizado de recursos</strong> — mínima CPU y RAM</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Tiempo real</strong> — respuesta inmediata a eventos</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Tamaño compacto</strong> — hardware y software a medida</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Reducción de costes</strong> — producción en masa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.6rem;">Ley de Moore — relevancia en sistemas embebidos</h3>
+      <p style="font-size:13.5px;">La Ley de Moore dice que el número de transistores se duplica cada 2 años. <strong>No aplica directamente a sistemas embebidos</strong> porque su objetivo es la optimización y el ahorro de recursos, no la máxima potencia. Priorizan eficiencia, coste, tamaño y fiabilidad. Un chip menos potente pero más barato suele ser la elección correcta.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: Plataformas de desarrollo -->
+  <div class="section">
+    <div class="section-label">02 — Plataformas de desarrollo</div>
+    <h2>Arduino vs Raspberry Pi vs ESP32</h2>
+
+    <div class="plataforma-grid">
+      <div class="plataforma-card arduino" data-tag="Microcontrolador">
+        <h3>Arduino UNO</h3>
+        <ul>
+          <li>MCU: ATmega328 a 16 MHz</li>
+          <li>14 pines digitales I/O (6 PWM)</li>
+          <li>6 pines analógicos (ADC 10-bit)</li>
+          <li>Alimentación: USB o 7–20V DC</li>
+          <li>Lenguaje: C++ simplificado (IDE)</li>
+          <li>Sin SO — bare metal</li>
+        </ul>
+        <div style="margin-top:0.6rem;">
+          <span class="tag-good">Tiempo real</span>
+          <span class="tag-good">Bajo consumo</span>
+          <span class="tag-bad">Sin red nativa</span>
+          <span class="tag-bad">Poca RAM</span>
+        </div>
+      </div>
+
+      <div class="plataforma-card raspi" data-tag="Minicomputadora (SBC)">
+        <h3>Raspberry Pi 3/4/5</h3>
+        <ul>
+          <li>SoC ARM Cortex-A (64 bits, 4 núcleos)</li>
+          <li>BCM2837B0 @ 1.4 GHz (Pi 3)</li>
+          <li>RAM: 512 MB – 8 GB LPDDR</li>
+          <li>40 pines GPIO</li>
+          <li>Wi-Fi + Bluetooth + Ethernet</li>
+          <li>SO: Raspberry Pi OS (Linux)</li>
+          <li>Python, C/C++, etc.</li>
+        </ul>
+        <div style="margin-top:0.6rem;">
+          <span class="tag-good">Potente</span>
+          <span class="tag-good">Linux completo</span>
+          <span class="tag-bad">Mayor consumo</span>
+          <span class="tag-bad">No tiempo real</span>
+        </div>
+      </div>
+
+      <div class="plataforma-card esp32" data-tag="MCU con WiFi/BT">
+        <h3>ESP32</h3>
+        <ul>
+          <li>Dual-core LX6 de 32 bits</li>
+          <li>Wi-Fi 2.4 GHz + Bluetooth/BLE</li>
+          <li>Flash + SRAM interna</li>
+          <li>Múltiples GPIO, ADC, DAC</li>
+          <li>UART, I2C, SPI, I2S, PWM</li>
+          <li>IDE Arduino / MicroPython / ESP-IDF</li>
+          <li>Deep sleep para bajo consumo</li>
+        </ul>
+        <div style="margin-top:0.6rem;">
+          <span class="tag-good">Wi-Fi integrado</span>
+          <span class="tag-good">Barato</span>
+          <span class="tag-bad">Sin Linux</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--ink);color:var(--bg);padding:1.2rem 1.75rem;margin-bottom:1.5rem;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#4ACA8A;margin-bottom:0.6rem;">Cuándo elegir cada uno</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;font-size:13px;">
+        <div><strong style="color:#4ACA8A;">Arduino</strong><br><span style="color:rgba(240,244,242,0.7);">Control en tiempo real, bajo consumo, sensor simple, sin red necesaria, coste limitado.</span></div>
+        <div><strong style="color:#4ACA8A;">Raspberry Pi</strong><br><span style="color:rgba(240,244,242,0.7);">Procesamiento complejo, visión por computador, IA, interfaz gráfica, servidor local, Python nativo.</span></div>
+        <div><strong style="color:#4ACA8A;">ESP32</strong><br><span style="color:rgba(240,244,242,0.7);">IoT con Wi-Fi/BT integrado, bajo consumo con conectividad, sensores en red, coste muy bajo.</span></div>
+      </div>
+    </div>
+
+    <div class="arm-grid">
+      <div class="arm-card cortex-a">
+        <h3>ARM Cortex-A</h3>
+        <p style="font-size:13px;"><strong>Aplicaciones.</strong> Alto rendimiento. Ejecuta SO complejos (Android, Linux). Smartphones, tablets, servidores de bajo consumo. Unidades NEON + TrustZone.</p>
+      </div>
+      <div class="arm-card cortex-r">
+        <h3>ARM Cortex-R</h3>
+        <p style="font-size:13px;"><strong>Tiempo Real.</strong> Alta disponibilidad y fiabilidad. Automoción, almacenamiento, redes críticas. Pipelines largos, ejecución fuera de orden.</p>
+      </div>
+      <div class="arm-card cortex-m">
+        <h3>ARM Cortex-M</h3>
+        <p style="font-size:13px;"><strong>Microcontroladores / IoT.</strong> Coste y potencia críticos. Sensores, dispositivos médicos, control industrial. Instrucciones Thumb-2, memorias limitadas.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: GPIO -->
+  <div class="section">
+    <div class="section-label">03 — Interfaz GPIO y protocolos de comunicación</div>
+    <h2>Pines GPIO y sus tipos</h2>
+    <p><strong>GPIO</strong> (General Purpose Input/Output): pin digital programable como entrada (leer señales) o salida (enviar señales). No tiene un propósito fijo.</p>
+
+    <table class="gpio-table">
+      <thead>
+        <tr>
+          <th>Tipo de pin</th>
+          <th>Función</th>
+          <th>Uso típico</th>
+          <th>Notas importantes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Digital I/O</td>
+          <td>Lee/escribe HIGH (3.3V/5V) o LOW (0V)</td>
+          <td>LEDs, botones, relés</td>
+          <td>Estado binario. Configurar antes de usar.</td>
+        </tr>
+        <tr>
+          <td>PWM</td>
+          <td>Señal digital que simula analógica variando el ancho de pulso (duty cycle)</td>
+          <td>Brillo LED, velocidad motor, servo</td>
+          <td>Raspi: mejores pines PWM hardware → <strong>12, 13, 18, 19</strong></td>
+        </tr>
+        <tr>
+          <td>ADC</td>
+          <td>Convierte señal analógica a digital</td>
+          <td>Leer sensores analógicos (LDR, termistor)</td>
+          <td>Raspberry Pi no tiene ADC integrado → necesita chip externo (MCP3008)</td>
+        </tr>
+        <tr>
+          <td>I2C (SDA/SCL)</td>
+          <td>Bus serie síncrono, 2 cables, multi-esclavo</td>
+          <td>Sensores BME280, acelerómetro, display</td>
+          <td>Raspi: GPIO2=SDA, GPIO3=SCL. Pull-up a 3.3V incluido</td>
+        </tr>
+        <tr>
+          <td>SPI (MOSI/MISO/SCLK/CS)</td>
+          <td>Bus serie síncrono, 4 cables, alta velocidad, full-duplex</td>
+          <td>NFC, SD cards, ADC externo</td>
+          <td>SPI0: CE0=GPIO8, CE1=GPIO7. NFC usa SPI + 5V</td>
+        </tr>
+        <tr>
+          <td>UART (TX/RX)</td>
+          <td>Serie asíncrona, 2 cables (TX→RX del otro)</td>
+          <td>Comunicación Raspi↔Arduino, GPS, módems</td>
+          <td>Ambos deben tener el mismo baud rate. GND común obligatorio</td>
+        </tr>
+        <tr>
+          <td>Alimentación</td>
+          <td>3.3V, 5V, GND</td>
+          <td>Alimentar periféricos</td>
+          <td>GPIO Raspi opera a 3.3V. 5V solo en pines específicos de alimentación</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pins-grid">
+      <div class="pins-card">
+        <div class="pins-name" style="color:var(--accent2);">I2C — 2 cables</div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:0.75rem;">Síncrono, maestro-esclavo, semidúplex. Múltiples dispositivos en el mismo bus (direccionamiento). Proceso: START → dirección → ACK → datos → STOP.</p>
+        <ul>
+          <li><span class="pin-name">SDA</span> — datos bidireccionales (GPIO 2)</li>
+          <li><span class="pin-name">SCL</span> — reloj generado por maestro (GPIO 3)</li>
+          <li><span class="pin-name">VCC</span> — 3.3V o 5V según periférico</li>
+          <li><span class="pin-name">GND</span> — tierra común</li>
+        </ul>
+      </div>
+      <div class="pins-card">
+        <div class="pins-name" style="color:var(--accent3);">SPI — 4 cables</div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:0.75rem;">Síncrono, full-duplex, más rápido que I2C. Cada esclavo necesita su propio pin CS. Sin direccionamiento — selección por hardware.</p>
+        <ul>
+          <li><span class="pin-name">MOSI</span> — Master Out Slave In</li>
+          <li><span class="pin-name">MISO</span> — Master In Slave Out</li>
+          <li><span class="pin-name">SCLK</span> — reloj del maestro</li>
+          <li><span class="pin-name">CE0/CE1</span> — Chip Select (GPIO8 / GPIO7)</li>
+        </ul>
+      </div>
+      <div class="pins-card">
+        <div class="pins-name" style="color:var(--accent);">UART — 3 cables</div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:0.75rem;">Asíncrono — sin reloj compartido. Misma velocidad de baudios en ambos lados. Bits de inicio, datos y parada.</p>
+        <ul>
+          <li><span class="pin-name">TX</span> — transmisor (→ RX del otro)</li>
+          <li><span class="pin-name">RX</span> — receptor (← TX del otro)</li>
+          <li><span class="pin-name">GND</span> — tierra común obligatoria</li>
+        </ul>
+      </div>
+      <div class="pins-card">
+        <div class="pins-name" style="color:var(--accent4);">PWM — duty cycle</div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:0.75rem;">Señal digital que alterna ON/OFF a alta frecuencia. El porcentaje del tiempo en ON = duty cycle. Simula tensión media analógica.</p>
+        <ul>
+          <li><span class="pin-name">0%</span> — siempre LOW (0V)</li>
+          <li><span class="pin-name">50%</span> — mitad ON, mitad OFF</li>
+          <li><span class="pin-name">100%</span> — siempre HIGH (3.3V)</li>
+          <li><span class="pin-name">Pines HW</span> — 12, 13, 18, 19 en Raspi</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Sensores -->
+  <div class="section">
+    <div class="section-label">04 — Sensores</div>
+    <h2>Clasificación de sensores</h2>
+    <p>Los sensores detectan cambios en el entorno y los convierten en señales eléctricas. Se clasifican de cuatro maneras distintas:</p>
+
+    <div class="sensor-tree">
+      <div class="tree-row">
+        <div class="tree-label">Por magnitud</div>
+        <div class="tree-items">
+          <span class="pill magnitud">Temperatura</span>
+          <span class="pill magnitud">Presión</span>
+          <span class="pill magnitud">Movimiento/Proximidad</span>
+          <span class="pill magnitud">Luz/Ópticos</span>
+          <span class="pill magnitud">Humedad</span>
+          <span class="pill magnitud">Gas/Químicos</span>
+          <span class="pill magnitud">Biosensores</span>
+        </div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-label">Por fuente energía</div>
+        <div class="tree-items">
+          <span class="pill fuente">Pasivos — no necesitan alimentación externa (PIR, termopar)</span>
+          <span class="pill fuente">Activos — emiten energía propia (ultrasonido, LiDAR, radar)</span>
+        </div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-label">Por señal de salida</div>
+        <div class="tree-items">
+          <span class="pill senal">Analógicos — salida continua proporcional (LDR, termistor)</span>
+          <span class="pill senal">Digitales — salida discreta binaria o bus (DHT22, DS18B20)</span>
+        </div>
+      </div>
+      <div class="tree-row" style="margin-bottom:0;">
+        <div class="tree-label">Por principio físico</div>
+        <div class="tree-items">
+          <span class="pill principio">Resistivos</span>
+          <span class="pill principio">Capacitivos</span>
+          <span class="pill principio">Inductivos</span>
+          <span class="pill principio">Piezoeléctricos</span>
+          <span class="pill principio">Ópticos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensor examples -->
+    <h3 style="margin-bottom:1rem;">Sensores concretos para la Raspberry Pi</h3>
+    <div class="sensor-grid">
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Temperatura</span>
+        </div>
+        <h3>Sensores de temperatura</h3>
+        <ul>
+          <li><strong>DS18B20</strong> — Digital 1-Wire. Precisión ±0.05°C. Rango −55°C a +125°C. Pull-up 4.7kΩ. Varios en el mismo GPIO.</li>
+          <li><strong>DHT11</strong> — Temperatura + humedad. Rango 0–50°C. Económico, menos preciso.</li>
+          <li><strong>DHT22</strong> — Temperatura + humedad. ±0.5°C. Rango −40°C a +80°C. Superior al DHT11.</li>
+          <li><strong>BMP280</strong> — I2C/SPI. Temperatura + presión. Estaciones meteorológicas.</li>
+          <li><strong>BME280</strong> — I2C/SPI. Temperatura + presión + humedad. Todo en uno.</li>
+          <li><strong>BME680</strong> — Añade calidad del aire (VOC) al BME280.</li>
+        </ul>
+        <div><span class="model-badge">1-Wire</span><span class="model-badge">I2C</span><span class="model-badge">SPI</span></div>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Movimiento / Distancia</span>
+        </div>
+        <h3>Sensores de movimiento</h3>
+        <ul>
+          <li><strong>HC-SR501 (PIR)</strong> — Infrarrojo pasivo. Detecta calor corporal. 3 pines (5V, GND, señal). Potenciómetros de ajuste. Salida digital.</li>
+          <li><strong>HC-SR04 (Ultrasonido)</strong> — Activo. Emite ondas y mide eco. Rango 2–450 cm. 4 pines. Divisor de voltaje en entrada (5V→3.3V).</li>
+          <li><strong>RCWL-0516 (Microondas)</strong> — Detecta movimiento a través de paredes finas. 3 pines. Mayor rango que PIR.</li>
+        </ul>
+        <p style="font-size:13px;margin-top:0.5rem;font-style:italic;">Tipos de detección PIR: infrarrojos pasivos (2 sensores piroeléctricos). Tipos ultrasonido: tiempo de vuelo del eco. Microondas: efecto Doppler.</p>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Luz / Ópticos</span>
+        </div>
+        <h3>Sensores de luz</h3>
+        <ul>
+          <li><strong>LDR (Fotorresistencia)</strong> — Resistencia disminuye con más luz. Analógico → necesita ADC externo (MCP3008).</li>
+          <li><strong>BH1750</strong> — Digital I2C. Mide en lux. Fácil de programar con Python.</li>
+          <li><strong>TSL2561</strong> — I2C. Luz visible + infrarroja. Amplio rango dinámico.</li>
+        </ul>
+        <p style="font-size:13px;margin-top:0.5rem;">Tipos ópticos: <em>barrera</em> (emisor y receptor separados), <em>reflectivos</em> (con catadióptrico), <em>difusos</em> (refleja el objeto).</p>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Gas / Humo</span>
+        </div>
+        <h3>Sensores de gas</h3>
+        <ul>
+          <li><strong>Serie MQ</strong> — Semiconductores de óxido metálico (MOS). Detectan CO, gas, alcohol, humo. Analógicos → ADC externo (MCP3008).</li>
+          <li><strong>BME680/BME688</strong> — I2C. Temperatura + presión + humedad + VOC (calidad del aire).</li>
+          <li><strong>SGP40</strong> — I2C. VOC específico.</li>
+        </ul>
+        <p style="font-size:13px;margin-top:0.5rem;">Tipos: electroquímicos, catalíticos, NDIR (infrarrojos), semiconductores MOS, fotoionización (PID), ultrasónicos.</p>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Presión</span>
+        </div>
+        <h3>Sensores de presión</h3>
+        <p style="font-size:13px;">Proceso: fuerza → deformación diafragma → cambio eléctrico → señal procesada.</p>
+        <ul>
+          <li><strong>BMP280</strong> — I2C/SPI. Presión + temperatura.</li>
+          <li><strong>BME280</strong> — I2C/SPI. Presión + temperatura + humedad.</li>
+          <li><strong>BMP390</strong> — 24 bits. Mayor resolución para altitud.</li>
+          <li>Sensores industriales (salida analógica) → necesitan <strong>ADS1015/ADS1115</strong> (ADC I2C)</li>
+        </ul>
+        <p style="font-size:13px;margin-top:0.5rem;">Tecnologías: piezorresistivos, capacitivos, piezoeléctricos, strain gauges.</p>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-header">
+          <span class="sensor-card-type">Principios físicos</span>
+        </div>
+        <h3>Tipos por principio</h3>
+        <ul>
+          <li><strong>Resistivos</strong> — resistencia cambia con magnitud. LDR, termistor (NTC/PTC), FSR, potenciómetro. → divisor de voltaje + ADC.</li>
+          <li><strong>Capacitivos</strong> — detectan sin contacto. Metales, plásticos, líquidos, a través de paredes no metálicas.</li>
+          <li><strong>Inductivos</strong> — solo metales. Campo EM. Corrientes parásitas atenúan oscilación. Industria.</li>
+          <li><strong>Piezoeléctricos</strong> — fuerza → voltaje. Vibración, acelerómetros, micrófonos.</li>
+          <li><strong>Ópticos</strong> — LED emisor + fotodiodo receptor. Barrera, reflectivo, difuso.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ADC -->
+    <h3 style="margin-bottom:0.75rem;">Convertidores ADC — imprescindibles para señales analógicas en Raspberry Pi</h3>
+    <div class="adc-row">
+      <div class="adc-cell">
+        <div class="adc-name">MCP3008</div>
+        <p>Resolución: <strong>10 bits</strong> (0–1023). 8 canales. Interfaz <strong>SPI</strong>. El más usado en proyectos básicos. Ideal para LDR, potenciómetros, termistores.</p>
+      </div>
+      <div class="adc-cell">
+        <div class="adc-name">ADS1115</div>
+        <p>Resolución: <strong>16 bits</strong>. 4 canales (o 2 diferenciales). Interfaz <strong>I²C</strong>. PGA interno. Para señales muy pequeñas. Instrumentación y médico.</p>
+      </div>
+      <div class="adc-cell">
+        <div class="adc-name">ADS1015</div>
+        <p>Resolución: <strong>12 bits</strong>. 4 canales. Interfaz <strong>I²C</strong>. Intermedio entre MCP3008 y ADS1115. Más simple que el 1115.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Actuadores -->
+  <div class="section">
+    <div class="section-label">05 — Actuadores</div>
+    <h2>Actuadores — los "músculos" del IoT</h2>
+    <p>El actuador convierte señal eléctrica/digital en acción física. Se clasifican por fuente de energía y por tipo de movimiento.</p>
+
+    <div class="act-grid">
+      <div class="act-card electrico">
+        <div class="act-card-label">Eléctricos — los más comunes en IoT</div>
+        <h3>Actuadores eléctricos</h3>
+        <p style="font-size:13px;">Convierten energía eléctrica en movimiento. Fácil integración con electrónica.</p>
+        <p style="font-size:13px;margin-top:0.5rem;"><strong>Ejemplos:</strong> LED, Relay, Servomotor (SG90), Motor DC, Motor paso a paso, resistencia calefactora, solenoides, displays.</p>
+      </div>
+      <div class="act-card neumatico">
+        <div class="act-card-label">Neumáticos — entornos industriales</div>
+        <h3>Actuadores neumáticos</h3>
+        <p style="font-size:13px;">Utilizan aire comprimido. Fuerza y velocidad altas. Entornos industriales.</p>
+        <p style="font-size:13px;margin-top:0.5rem;"><strong>Ejemplos:</strong> Cilindros neumáticos, motores de giro neumáticos.</p>
+      </div>
+      <div class="act-card hidraulico">
+        <div class="act-card-label">Hidráulicos — alta potencia</div>
+        <h3>Actuadores hidráulicos</h3>
+        <p style="font-size:13px;">Líquido (aceite) a presión. Gran fuerza. Alta potencia.</p>
+        <p style="font-size:13px;margin-top:0.5rem;"><strong>Ejemplos:</strong> Cilindros hidráulicos, motores de giro hidráulicos.</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>LED — conexión a GPIO</h3>
+        <p style="font-size:13px;">Ánodo (pata larga) → GPIO pin. Cátodo (pata corta) → resistencia (330Ω) → GND.</p>
+        <p style="font-size:13px;margin-top:0.4rem;font-family:'IBM Plex Mono',monospace;background:var(--surface2);padding:8px;font-size:12px;">GPIO 17 → [ánodo] LED [cátodo] → 330Ω → GND</p>
+        <p style="font-size:13px;margin-top:0.4rem;">LED RGB: ánodo o cátodo común, 3 resistencias (una por color R, G, B).</p>
+      </div>
+      <div class="grid-card">
+        <h3>Servomotor — conexión PWM</h3>
+        <p style="font-size:13px;">Control preciso de posición mediante señal PWM. Tiene engranajes internos + potenciómetro de retroalimentación.</p>
+        <ul style="list-style:none;font-size:13px;margin-top:0.5rem;font-family:'IBM Plex Mono',monospace;">
+          <li style="padding:2px 0;"><span style="color:var(--accent3);">Marrón/Negro</span> → GND</li>
+          <li style="padding:2px 0;"><span style="color:var(--accent3);">Rojo</span> → 5V</li>
+          <li style="padding:2px 0;"><span style="color:var(--accent3);">Naranja/Amarillo</span> → GPIO PWM (ej. GPIO17)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sensor/Actuator classification exam table -->
+    <div class="exam-box" style="margin-bottom:1.5rem;">
+      <div class="exam-box-title">⚠ Clasificación examen — ¿Sensor o Actuador?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:13.5px;">
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);display:block;margin-bottom:0.4rem;">SENSORES (captan datos)</strong>
+          <ul style="list-style:none;color:var(--ink2);">
+            <li style="padding:2px 0;">Reed Switch (interruptor magnético)</li>
+            <li style="padding:2px 0;">Fototransistor (detecta luz)</li>
+            <li style="padding:2px 0;">Estimador de Distancia (ultrasonido)</li>
+            <li style="padding:2px 0;">Giróscopo (mide orientación angular)</li>
+            <li style="padding:2px 0;">LDR / Light-dependent resistor</li>
+          </ul>
+        </div>
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent3);display:block;margin-bottom:0.4rem;">ACTUADORES (ejecutan acciones)</strong>
+          <ul style="list-style:none;color:var(--ink2);">
+            <li style="padding:2px 0;">Relay (interruptor eléctrico controlado)</li>
+            <li style="padding:2px 0;">Dispositivo Paso a Paso (stepper motor)</li>
+            <li style="padding:2px 0;">Servo Motor (posición controlada)</li>
+            <li style="padding:2px 0;">Display (salida visual)</li>
+            <li style="padding:2px 0;">Solenoide (actuador lineal electromagnético)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Criterios de selección -->
+  <div class="section">
+    <div class="section-label">06 — Criterios de selección</div>
+    <h2>Cómo elegir un sensor o actuador</h2>
+
+    <h3 style="margin-bottom:0.75rem;">Criterios ambientales</h3>
+    <div class="criteria-grid">
+      <div class="criteria-card">
+        <h3>Temperatura</h3>
+        <p style="font-size:13px;">Rango de operación que supere las temperaturas extremas del entorno + margen de seguridad.</p>
+      </div>
+      <div class="criteria-card">
+        <h3>Humedad</h3>
+        <p style="font-size:13px;">Identificar HR min/max esperada. &gt;80% HR puede degradar componentes. Evaluar recuperación de condensación.</p>
+      </div>
+      <div class="criteria-card">
+        <h3>Corrosión</h3>
+        <p style="font-size:13px;">Agentes corrosivos (ácidos, sales, agua de mar). Concentración + temperatura + tipo de exposición (continua vs. intermitente).</p>
+      </div>
+      <div class="criteria-card">
+        <h3>EMI / EMC</h3>
+        <p style="font-size:13px;">Identificar fuentes de ruido EM cercanas (motores, variadores). Inmunidad del dispositivo a interferencias. También sus propias emisiones.</p>
+      </div>
+      <div class="criteria-card">
+        <h3>Tamaño y Robustez</h3>
+        <p style="font-size:13px;">Compatible con el espacio disponible. Resistencia a golpes (estándares IK), vibraciones (frecuencia y amplitud), caídas.</p>
+      </div>
+      <div class="criteria-card">
+        <h3>Consumo de energía</h3>
+        <p style="font-size:13px;">Modo sleep (µA o nA), modo activo, picos de corriente. Protocolo inalámbrico: LoRaWAN/BLE (bajo) vs. Wi-Fi/4G (alto).</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Criterios del sensor</h3>
+    <div class="criteria-grid">
+      <div class="criteria-card" style="border-left-color:var(--accent2);">
+        <h3 style="color:var(--accent2);">Sensibilidad</h3>
+        <p style="font-size:13px;">Capacidad de detectar cambios pequeños en la magnitud medida y producir señal proporcional.</p>
+      </div>
+      <div class="criteria-card" style="border-left-color:var(--accent2);">
+        <h3 style="color:var(--accent2);">Rango</h3>
+        <p style="font-size:13px;">Intervalo mínimo–máximo que el sensor puede medir de forma fiable. Evitar saturación o falta de detección.</p>
+      </div>
+      <div class="criteria-card" style="border-left-color:var(--accent2);">
+        <h3 style="color:var(--accent2);">Precisión vs. Exactitud</h3>
+        <p style="font-size:13px;"><strong>Precisión</strong>: misma lectura en condiciones iguales (repetibilidad). <strong>Exactitud</strong>: qué tan cerca del valor real (rango de error).</p>
+      </div>
+      <div class="criteria-card" style="border-left-color:var(--accent2);">
+        <h3 style="color:var(--accent2);">Estabilidad y Linealidad</h3>
+        <p style="font-size:13px;"><strong>Estabilidad</strong>: mantiene sus características a lo largo del tiempo. <strong>Linealidad</strong>: relación constante entrada-salida; simplifica calibración.</p>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <div class="key-box-label">criterios económicos — coste total de propiedad (TCO)</div>
+      <ul>
+        <li>Precio de adquisición inicial + descuentos por volumen</li>
+        <li>Coste de instalación, cableado y configuración</li>
+        <li>Consumo energético a largo plazo</li>
+        <li>Mantenimiento, calibración y reparación</li>
+        <li>Disponibilidad de repuestos y soporte técnico</li>
+        <li>Tiempo de vida alineado con el proyecto</li>
+        <li>Longevidad del protocolo de comunicación (evitar 2G/3G)</li>
+        <li>Estandarización — preferir estándares abiertos a propietarios</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 2 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>

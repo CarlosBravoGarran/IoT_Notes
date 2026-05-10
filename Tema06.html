@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT – Tema 6: MQTT, CoAP y Protocolos de Comunicación</title>
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6357/6357665.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #F2F5F0;
+    --surface: #FAFCF9;
+    --surface2: #E4EAE2;
+    --ink: #161C14;
+    --ink2: #3C4A38;
+    --ink3: #7A907A;
+    --accent: #2A7A3A;
+    --accent2: #0A5C8A;
+    --accent3: #C45A0A;
+    --accent4: #7A2A8A;
+    --border: rgba(22,28,20,0.1);
+    --border-strong: rgba(22,28,20,0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    background: #161C14;
+    color: #F2F5F0;
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: 'T6';
+    font-family: 'Syne', sans-serif;
+    font-size: 18rem;
+    font-weight: 800;
+    position: absolute;
+    right: -1rem;
+    top: -3rem;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .subject-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #7AE87A;
+    background: rgba(122,232,122,0.1);
+    border: 1px solid rgba(122,232,122,0.3);
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  h1 { font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; color: #F2F5F0; }
+  .subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: rgba(242,245,240,0.45); margin-top: 0.75rem; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 1.25rem; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 0.6rem; }
+  p { margin-bottom: 0.8rem; color: var(--ink2); }
+  p:last-child { margin-bottom: 0; }
+  .section { margin-bottom: 3.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border-strong); margin: 2.5rem 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; color: var(--ink2); }
+
+  /* Exam box */
+  .exam-box { background: #FEF5ED; border: 1.5px solid #E8A055; border-left: 4px solid var(--accent3); padding: 1rem 1.5rem; margin-bottom: 2rem; }
+  .exam-box-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--accent3); margin-bottom: 0.5rem; }
+  .exam-box p { font-size: 14px; color: var(--ink2); margin-bottom: 0.4rem; }
+
+  /* Comparison table */
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .cmp-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .cmp-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .cmp-table tr:nth-child(even) td { background: var(--surface); }
+  .cmp-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--ink); white-space: nowrap; }
+  .cmp-table td:nth-child(2) { color: var(--accent2); }
+  .cmp-table td:nth-child(3) { color: var(--accent3); }
+
+  /* Protocol comparison - two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .grid-card { background: var(--surface); padding: 1.3rem 1.5rem; }
+  .grid-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .grid-card p { font-size: 13.5px; }
+
+  /* QoS cards */
+  .qos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .qos-card { background: var(--surface); padding: 1.2rem 1.4rem; }
+  .qos-level { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+  .qos-card.q0 .qos-level { color: var(--accent3); }
+  .qos-card.q1 .qos-level { color: var(--accent2); }
+  .qos-card.q2 .qos-level { color: var(--accent4); }
+  .qos-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--ink); }
+  .qos-card p { font-size: 13px; }
+  .qos-use { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.4rem; }
+
+  /* MQTT flow diagram */
+  .mqtt-flow { background: #161C14; padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .mqtt-flow-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7AE87A; margin-bottom: 1rem; }
+  .flow-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
+  .flow-node { background: rgba(122,232,122,0.1); border: 1px solid rgba(122,232,122,0.3); color: #7AE87A; padding: 4px 12px; white-space: nowrap; }
+  .flow-arrow { color: rgba(242,245,240,0.3); flex-shrink: 0; font-size: 14px; }
+  .flow-label { color: rgba(242,245,240,0.6); font-size: 11.5px; }
+  .flow-broker { background: rgba(91,192,235,0.1); border: 1px solid rgba(91,192,235,0.3); color: #5BC0EB; padding: 4px 14px; white-space: nowrap; }
+
+  /* CoAP actors grid */
+  .actor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .actor-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent3); padding: 1rem 1.1rem; }
+  .actor-name { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .actor-card p { font-size: 13px; }
+
+  /* CoAP methods */
+  .coap-methods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .method-card { background: var(--surface); border: 1px solid var(--border); padding: 0.75rem 0.9rem; text-align: center; }
+  .method-name { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 13px; color: var(--accent2); margin-bottom: 0.25rem; }
+  .method-card p { font-size: 12px; }
+
+  /* CoAP response codes */
+  .codes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .code-cell { background: var(--surface); padding: 0.6rem 1rem; display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
+  .code-num { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent2); min-width: 50px; flex-shrink: 0; }
+  .code-text { color: var(--ink2); }
+
+  /* Packet structure */
+  .packet-box { background: var(--surface); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .packet-header-row { display: flex; gap: 1px; background: var(--border-strong); }
+  .packet-field { background: var(--surface); padding: 0.6rem 0.75rem; text-align: center; flex: 1; }
+  .packet-field.large { flex: 3; }
+  .packet-field.medium { flex: 2; }
+  .pf-name { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent); margin-bottom: 0.2rem; }
+  .pf-size { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink3); }
+  .packet-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); padding: 0.4rem 0.75rem; border-top: 1px solid var(--border); background: var(--surface2); }
+
+  /* Key box dark */
+  .key-box { background: var(--ink); color: var(--bg); padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .key-box-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7AE87A; margin-bottom: 0.75rem; }
+  .key-box ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 2rem; }
+  .key-box ul li { font-size: 14px; color: rgba(242,245,240,0.85); display: flex; gap: 8px; align-items: baseline; }
+  .key-box ul li::before { content: '—'; color: #7AE87A; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  /* MOM vs REST */
+  .paradigm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .paradigm-card { background: var(--surface); padding: 1.4rem 1.5rem; }
+  .paradigm-card::before { content: attr(data-label); font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 0.5rem; }
+  .paradigm-card.mom::before { color: var(--accent); }
+  .paradigm-card.rest::before { color: var(--accent2); }
+  .paradigm-card h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+  .paradigm-card ul { list-style: none; font-size: 13px; color: var(--ink2); }
+  .paradigm-card ul li { padding: 3px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+  .paradigm-card ul li:last-child { border-bottom: none; }
+  .paradigm-card ul li::before { content: '›'; color: var(--ink3); flex-shrink: 0; }
+
+  /* MQTT-SN section */
+  .mqttsn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .mqttsn-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.2rem; }
+  .mqttsn-card h3 { font-size: 0.88rem; margin-bottom: 0.4rem; }
+  .mqttsn-card p { font-size: 13px; }
+
+  .page-footer { background: var(--surface2); border-top: 1px solid var(--border-strong); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); }
+
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--surface2); padding: 1px 5px; color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>MQTT, CoAP y<br>Protocolos IoT</h1>
+  <p class="subtitle">Tema 6 &nbsp;·&nbsp; MOM vs REST, MQTT pub/sub, QoS, MQTT-SN, CoAP, paquetes y casos de uso</p>
+</header>
+
+<div class="container">
+
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Lo que pregunta el profe</div>
+    <p>Práctica de MQTT directa en examen. Saber la diferencia entre <strong>MOM (pub/sub) y REST</strong>. Niveles <strong>QoS 0/1/2</strong> de MQTT y cuándo usar cada uno. Actores de CoAP. Diferencias MQTT vs CoAP. <strong>No hace falta saber cómo funcionan los protocolos para la práctica</strong> — pero sí para el test.</p>
+  </div>
+
+  <!-- SECTION 1: Por qué no basta HTTP -->
+  <div class="section">
+    <div class="section-label">01 — Por qué HTTP no es suficiente para IoT</div>
+    <h2>Limitaciones de HTTP en entornos restringidos</h2>
+    <p>HTTP fue diseñado para computación de propósito general en modelos cliente/servidor. Los dispositivos IoT pueden ser muy <strong>restringidos, remotos y con ancho de banda limitado</strong>. Por eso se necesitan protocolos más eficientes.</p>
+
+    <div class="two-col">
+      <div class="grid-card">
+        <h3>Problemas de HTTP en IoT</h3>
+        <ul style="list-style:none;font-size:13.5px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent3);">›</span> Cabeceras HTTP son grandes (cientos de bytes)</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent3);">›</span> Requiere TCP — mucho overhead en handshake</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent3);">›</span> Modelo síncrono — cliente espera respuesta</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent3);">›</span> No escala bien a millones de dispositivos</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent3);">›</span> No apto para dispositivos dormidos/esporádicos</li>
+        </ul>
+      </div>
+      <div class="grid-card">
+        <h3>IoT vs M2M</h3>
+        <p style="font-size:13.5px;">Una diferencia clave: <strong>M2M</strong> puede comunicarse a través de WAN a un servidor dedicado <em>sin ningún protocolo encapsulado</em>. <strong>IoT</strong> se basa por definición en la comunicación entre endpoints y servicios usando Internet como tejido de red común — siempre con protocolos encapsulados.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: MOM vs REST -->
+  <div class="section">
+    <div class="section-label">02 — Paradigmas de mensajería</div>
+    <h2>MOM (pub/sub) vs. RESTful</h2>
+
+    <div class="paradigm-grid">
+      <div class="paradigm-card mom" data-label="Middleware Orientado a Mensajes (MOM)">
+        <h3>Publicar / Suscribir (pub/sub)</h3>
+        <ul>
+          <li>Comunicación mediante colas de mensajes distribuidas</li>
+          <li>Existe un <strong>broker</strong> central que gestiona el flujo</li>
+          <li>Productores y consumidores desacoplados — no se conocen entre sí</li>
+          <li>No necesitan conocer IP/puerto del otro extremo</li>
+          <li>Invariante en el tiempo — el suscriptor puede responder horas después</li>
+          <li>Escala muy bien a millones de dispositivos</li>
+          <li>Datos pueden persistir en colas (resiliencia)</li>
+          <li><strong>Ejemplos:</strong> MQTT, AMQP, STOMP</li>
+        </ul>
+      </div>
+      <div class="paradigm-card rest" data-label="REST (cliente-servidor)">
+        <h3>RESTful HTTP</h3>
+        <ul>
+          <li>Servidor posee el estado de un recurso</li>
+          <li>Clientes acceden con GET, PUT, POST, DELETE sobre un URI</li>
+          <li>Sin broker — conexión directa cliente-servidor</li>
+          <li>Patrón síncrono de solicitud-respuesta</li>
+          <li>Clientes inician siempre la comunicación</li>
+          <li>Disfruta de la seguridad HTTPS</li>
+          <li>Típico de arquitecturas cliente-servidor</li>
+          <li><strong>Ejemplo:</strong> APIs web, CoAP (versión ligera)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.6rem;">MQTT <em>no</em> es una cola de mensajes</h3>
+      <p style="font-size:13.5px;">Aunque usa pub/sub, <strong>MQTT no almacena mensajes por defecto</strong>. Si nadie está suscrito a un topic cuando se publica un mensaje, ese mensaje se pierde. Las colas de mensajes tradicionales (AMQP) sí almacenan. La diferencia es importante: MQTT es para tiempo real, no para almacenamiento.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: MQTT -->
+  <div class="section">
+    <div class="section-label">03 — MQTT</div>
+    <h2>MQTT — Message Queuing Telemetry Transport</h2>
+
+    <div style="background:var(--surface);border:1px solid var(--border-strong);border-left:4px solid var(--accent);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <p style="font-size:13.5px;font-style:italic;color:var(--ink2);">"Protocolo de mensajería de publicación/suscripción, extremadamente simple y liviano, diseñado para dispositivos restringidos y redes de bajo ancho de banda, alta latencia o no confiables. Minimiza el ancho de banda de la red y los requisitos de recursos del dispositivo, garantizando confiabilidad y cierto grado de garantía de entrega."</p>
+    </div>
+
+    <div class="key-box">
+      <div class="key-box-label">características clave de MQTT</div>
+      <ul>
+        <li>Protocolo pub/sub sobre <strong>TCP/IP</strong></li>
+        <li>Orientado a conexión (cliente ↔ broker primero)</li>
+        <li>Cabecera fija de solo <strong>2 bytes</strong></li>
+        <li>Payload máximo: <strong>256 MB</strong> (en práctica limitado por broker)</li>
+        <li>Independiente del formato de datos (JSON, binario, texto…)</li>
+        <li>Creado por IBM en 1993 para oleoductos remotos vía satélite</li>
+        <li>Estándar OASIS desde 2013, ISO/IEC 20922</li>
+        <li>Escala a <strong>millones de mensajes/hora</strong> y decenas de miles de editores</li>
+      </ul>
+    </div>
+
+    <!-- MQTT flow -->
+    <h3 style="margin-bottom:0.75rem;">Flujo pub/sub en MQTT</h3>
+    <div class="mqtt-flow">
+      <div class="mqtt-flow-label">Arquitectura MQTT — broker central</div>
+
+      <div class="flow-row">
+        <span class="flow-node">Sensor 1 (Publisher)</span>
+        <span class="flow-arrow">──PUBLISH "temperatura/sala"──▶</span>
+        <span class="flow-broker">MQTT Broker</span>
+        <span class="flow-arrow">──▶</span>
+        <span class="flow-node">App Dashboard (Subscriber)</span>
+      </div>
+      <div class="flow-row">
+        <span class="flow-node">Sensor 2 (Publisher)</span>
+        <span class="flow-arrow">──PUBLISH "humedad/sala"──────▶</span>
+        <span class="flow-broker">MQTT Broker</span>
+        <span class="flow-arrow">──▶</span>
+        <span class="flow-node">Base de datos (Subscriber)</span>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(242,245,240,0.5);margin-top:0.75rem;">
+        El broker filtra mensajes por topic y los reenvía solo a los suscriptores interesados.<br>
+        Editores y suscriptores no se conocen directamente — el broker es el intermediario.
+      </div>
+    </div>
+
+    <!-- MQTT packet structure -->
+    <h3 style="margin-bottom:0.75rem;">Estructura del paquete MQTT</h3>
+    <div class="packet-box">
+      <div class="packet-header-row">
+        <div class="packet-field">
+          <div class="pf-name">Fixed Header</div>
+          <div class="pf-size">2 bytes — siempre presente</div>
+        </div>
+        <div class="packet-field">
+          <div class="pf-name">Variable Header</div>
+          <div class="pf-size">Opcional — depende del tipo</div>
+        </div>
+        <div class="packet-field large">
+          <div class="pf-name">Payload</div>
+          <div class="pf-size">Opcional — hasta 256 MB</div>
+        </div>
+      </div>
+      <div class="packet-label">El fixed header incluye: tipo de mensaje (CONNECT, PUBLISH, SUBSCRIBE…) + flags + longitud restante</div>
+    </div>
+
+    <!-- MQTT filters -->
+    <h3 style="margin-bottom:0.75rem;">Tipos de filtrado del broker MQTT</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:2rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);padding:1rem 1.1rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;">Filtrado de temas</div>
+        <p style="font-size:13px;">Los clientes se suscriben a topics específicos y ramas. El broker solo reenvía los mensajes que coincidan. Ej: suscribirse a <code>temperatura/#</code> recibe todos los subtopics de temperatura.</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:1rem 1.1rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;">Filtrado de contenido</div>
+        <p style="font-size:13px;">El broker puede inspeccionar y filtrar los datos publicados. Permite gestionar datos no cifrados antes de almacenarlos o publicarlos a otros clientes.</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:1rem 1.1rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;">Filtrado de tipo</div>
+        <p style="font-size:13px;">El suscriptor también puede aplicar sus propios filtros al flujo de datos recibido. Analiza el contenido y decide si procesar o ignorar cada mensaje entrante.</p>
+      </div>
+    </div>
+
+    <!-- QoS -->
+    <h3 style="margin-bottom:0.75rem;">Niveles de QoS — Calidad de Servicio</h3>
+    <div class="qos-grid">
+      <div class="qos-card q0">
+        <div class="qos-level">QoS 0</div>
+        <div class="qos-name">Fire and Forget</div>
+        <p style="font-size:13px;">Entrega de mejor esfuerzo. <strong>Sin acuse de recibo</strong>. El receptor no confirma. El emisor no reintenta. Si el mensaje se pierde, se pierde.</p>
+        <div class="qos-use">✓ Conexiones por cable · Ancho de banda muy limitado · Datos que no son críticos</div>
+      </div>
+      <div class="qos-card q1">
+        <div class="qos-level">QoS 1</div>
+        <div class="qos-name">Al menos una vez</div>
+        <p style="font-size:13px;">Garantiza entrega <strong>al menos una vez</strong>. Receptor envía <code>PUBACK</code>. Puede recibirse <em>más de una vez</em> (duplicados posibles). Más rápido que QoS-2.</p>
+        <div class="qos-use">✓ Uso predeterminado recomendado · Reduce costo de transmisión</div>
+      </div>
+      <div class="qos-card q2">
+        <div class="qos-level">QoS 2</div>
+        <div class="qos-name">Exactamente una vez</div>
+        <p style="font-size:13px;">Garantía de entrega <strong>exactamente una vez</strong>. Protocolo de 4 pasos: <code>PUBLISH → PUBREC → PUBREL → PUBCOMP</code>. Más tráfico, más lento.</p>
+        <div class="qos-use">✓ Misión crítica · Cuando duplicados causarían fallos</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: MQTT-SN -->
+  <div class="section">
+    <div class="section-label">04 — MQTT-SN</div>
+    <h2>MQTT-SN — MQTT para redes de sensores</h2>
+    <p>Derivado de MQTT diseñado para redes inalámbricas de área personal (WPAN). Misma filosofía, adaptada a: <strong>bajo ancho de banda, fallos de enlace, mensajes cortos, hardware muy restringido</strong>.</p>
+
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>Diferencias con MQTT estándar</h3>
+        <ul style="list-style:none;font-size:13px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>No requiere TCP/IP</strong> — funciona sobre UDP, BLE, Zigbee, serie</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Topics: nombres reemplazados por <strong>IDs cortos de 2 bytes</strong></li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> 3 mensajes CONNECT (vs 1 en MQTT) para transportar topic + mensaje</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Proceso de descubrimiento para encontrar gateways</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Soporte para clientes <strong>dormidos</strong> — mensajes en búfer hasta despertar</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Múltiples gateways posibles — reparto de carga</li>
+        </ul>
+      </div>
+      <div class="grid-card">
+        <h3>Actores de MQTT-SN</h3>
+        <ul style="list-style:none;font-size:13px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Clientes</strong> — publican y se suscriben igual que en MQTT</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Gateway</strong> — convierte MQTT-SN ↔ MQTT. Primero se conecta al broker MQTT, luego emite ADVERTISE a los clientes</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Retransmisores</strong> — nodos intermedios que re-encapsulan tramas sin modificarlas</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> <strong>Brokers</strong> — igual que en MQTT estándar</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mqttsn-grid">
+      <div class="mqttsn-card">
+        <h3>Mensaje ADVERTISE</h3>
+        <p style="font-size:13px;">Transmitido periódicamente por una gateway para anunciar su presencia a los clientes de la red.</p>
+      </div>
+      <div class="mqttsn-card">
+        <h3>Mensaje SEARCHGW</h3>
+        <p style="font-size:13px;">Emitido por un cliente cuando busca una gateway. Incluye parámetro de radio (número de saltos que puede seguir el mensaje).</p>
+      </div>
+      <div class="mqttsn-card">
+        <h3>Mensaje GWINFO</h3>
+        <p style="font-size:13px;">Respuesta de la gateway al SEARCHGW. Contiene el ID y dirección de la gateway. Solo se transmite cuando la solicitud viene de un cliente.</p>
+      </div>
+      <div class="mqttsn-card">
+        <h3>Clientes dormidos</h3>
+        <p style="font-size:13px;">Modo especial donde el servidor/router de borde almacena en búfer los mensajes destinados al cliente dormido y los entrega al despertar. Clave para baterías.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: CoAP -->
+  <div class="section">
+    <div class="section-label">05 — CoAP</div>
+    <h2>CoAP — Constrained Application Protocol</h2>
+    <p>Protocolo del IETF (RFC 7252) creado por el grupo CoRE. Diseñado específicamente para comunicación <strong>M2M entre nodos de borde restringidos</strong>. Funciona sobre <strong>UDP</strong> (no TCP). Similar a HTTP pero hasta 10× más pequeño en cabeceras.</p>
+
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>CoAP vs MQTT</h3>
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:4px 0;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;width:100px;">Paradigma</td>
+            <td style="padding:4px 6px;color:var(--accent2);">REST (req/resp)</td>
+            <td style="padding:4px 6px;color:var(--accent);">Pub/Sub</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:4px 0;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;">Transporte</td>
+            <td style="padding:4px 6px;color:var(--accent2);">UDP</td>
+            <td style="padding:4px 6px;color:var(--accent);">TCP</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:4px 0;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;">Cabecera</td>
+            <td style="padding:4px 6px;color:var(--accent2);">4 bytes (10-20 total)</td>
+            <td style="padding:4px 6px;color:var(--accent);">2 bytes fijos</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:4px 0;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;">Broker</td>
+            <td style="padding:4px 6px;color:var(--accent2);">No (directo)</td>
+            <td style="padding:4px 6px;color:var(--accent);">Sí (obligatorio)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;">Observadores</td>
+            <td style="padding:4px 6px;color:var(--accent2);">Sí (único en CoAP)</td>
+            <td style="padding:4px 6px;color:var(--accent);">Suscriptores</td>
+          </tr>
+        </table>
+      </div>
+      <div class="grid-card">
+        <h3>URI en CoAP</h3>
+        <p style="font-size:13px;margin-bottom:0.6rem;">Comparte sintaxis con HTTP. El usuario debe conocer la dirección de antemano.</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--surface2);padding:8px 12px;color:var(--accent2);margin-bottom:0.6rem;">coap://host[:puerto]/[ruta][?consulta]</div>
+        <p style="font-size:13px;">Rendimiento: algunas implementaciones de CoAP funcionan hasta <strong>64 veces mejor</strong> que sus equivalentes HTTP en hardware similar.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Métodos CoAP (como HTTP)</h3>
+    <div class="coap-methods">
+      <div class="method-card">
+        <div class="method-name">GET</div>
+        <p style="font-size:12px;">Obtener el estado actual de un recurso</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">PUT</div>
+        <p style="font-size:12px;">Actualizar un recurso existente</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">POST</div>
+        <p style="font-size:12px;">Crear un nuevo recurso</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">DELETE</div>
+        <p style="font-size:12px;">Eliminar un recurso</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Códigos de respuesta CoAP</h3>
+    <div class="codes-grid">
+      <div class="code-cell"><span class="code-num">2.01</span><span class="code-text">Created — recurso creado</span></div>
+      <div class="code-cell"><span class="code-num">2.02</span><span class="code-text">Deleted — recurso eliminado</span></div>
+      <div class="code-cell"><span class="code-num">2.04</span><span class="code-text">Changed — recurso modificado</span></div>
+      <div class="code-cell"><span class="code-num">2.05</span><span class="code-text">Content — respuesta con contenido</span></div>
+      <div class="code-cell"><span class="code-num">4.04</span><span class="code-text">Not Found — recurso no encontrado</span></div>
+      <div class="code-cell"><span class="code-num">4.05</span><span class="code-text">Method Not Allowed — método no permitido</span></div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Los 7 actores de CoAP</h3>
+    <div class="actor-grid">
+      <div class="actor-card">
+        <div class="actor-name">Endpoints</div>
+        <p>Orígenes y destinos de mensajes CoAP. La definición exacta depende del transporte utilizado.</p>
+      </div>
+      <div class="actor-card">
+        <div class="actor-name">Cliente</div>
+        <p>Origina la solicitud. Destino de la respuesta. Inicia la comunicación.</p>
+      </div>
+      <div class="actor-card">
+        <div class="actor-name">Servidor</div>
+        <p>Destino de la solicitud. Origen de la respuesta. Aloja los recursos.</p>
+      </div>
+      <div class="actor-card">
+        <div class="actor-name">Proxy</div>
+        <p>Endpoint al que clientes delegan solicitudes. Puede hacer <em>cross-proxying</em> entre CoAP y HTTP. Reduce carga de red y proporciona seguridad.</p>
+      </div>
+      <div class="actor-card">
+        <div class="actor-name">Intermediario</div>
+        <p>Cliente que actúa también como servidor hacia un servidor de origen. Un proxy es un tipo de intermediario.</p>
+      </div>
+      <div class="actor-card">
+        <div class="actor-name">Servidor de origen</div>
+        <p>El servidor donde reside físicamente el recurso solicitado. El destino final.</p>
+      </div>
+      <div class="actor-card" style="border-left-color:var(--accent);grid-column:span 3;">
+        <div class="actor-name" style="color:var(--accent);">Observadores ⭐ — exclusivo de CoAP</div>
+        <p>Un cliente se registra para observar un recurso mediante un GET modificado. El servidor <strong>notifica automáticamente al observador</strong> cada vez que el recurso cambia de estado. Similar al modelo de suscripción MQTT. La relación termina cuando el cliente envía RST u otro GET.</p>
+      </div>
+    </div>
+
+    <!-- CoAP message types -->
+    <h3 style="margin-bottom:0.75rem;">Tipos de mensajes CoAP</h3>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border-strong);border:1px solid var(--border-strong);margin-bottom:1.5rem;">
+      <div style="background:var(--surface);padding:0.9rem 1.1rem;">
+        <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);">CON (Confirmable)</strong>
+        <p style="font-size:13px;margin-top:0.3rem;">Requiere ACK del receptor. Si no llega ACK, el emisor retransmite con mismo Message_ID. Mecanismo de timeout para compensar la falta de fiabilidad de UDP.</p>
+      </div>
+      <div style="background:var(--surface);padding:0.9rem 1.1rem;">
+        <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);">NON (Non-confirmable)</strong>
+        <p style="font-size:13px;margin-top:0.3rem;">No requiere ACK. Para datos no críticos donde la velocidad es prioritaria (lecturas de sensores frecuentes).</p>
+      </div>
+      <div style="background:var(--surface);padding:0.9rem 1.1rem;">
+        <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);">ACK (Acknowledgement)</strong>
+        <p style="font-size:13px;margin-top:0.3rem;">Confirma un CON. Puede incluir la respuesta al mensaje confirmable (respuesta piggyback) para optimizar la comunicación.</p>
+      </div>
+      <div style="background:var(--surface);padding:0.9rem 1.1rem;">
+        <strong style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);">RST (Reset)</strong>
+        <p style="font-size:13px;margin-top:0.3rem;">Indica que el receptor no puede procesar el mensaje. También termina una relación de observación.</p>
+      </div>
+    </div>
+
+    <!-- CoAP packet structure -->
+    <h3 style="margin-bottom:0.75rem;">Estructura del paquete CoAP</h3>
+    <div class="packet-box">
+      <div class="packet-header-row">
+        <div class="packet-field">
+          <div class="pf-name">Ver</div>
+          <div class="pf-size">2 bits</div>
+        </div>
+        <div class="packet-field">
+          <div class="pf-name">T (Type)</div>
+          <div class="pf-size">2 bits</div>
+        </div>
+        <div class="packet-field">
+          <div class="pf-name">TKL</div>
+          <div class="pf-size">4 bits</div>
+        </div>
+        <div class="packet-field">
+          <div class="pf-name">Code</div>
+          <div class="pf-size">8 bits</div>
+        </div>
+        <div class="packet-field large">
+          <div class="pf-name">Message ID</div>
+          <div class="pf-size">16 bits</div>
+        </div>
+      </div>
+      <div class="packet-header-row" style="border-top:1px solid var(--border-strong);">
+        <div class="packet-field medium">
+          <div class="pf-name">Token</div>
+          <div class="pf-size">0-8 bytes (opcional)</div>
+        </div>
+        <div class="packet-field medium">
+          <div class="pf-name">Options</div>
+          <div class="pf-size">Variable (opcional)</div>
+        </div>
+        <div class="packet-field large">
+          <div class="pf-name">Payload</div>
+          <div class="pf-size">Variable (opcional)</div>
+        </div>
+      </div>
+      <div class="packet-label">Cabecera fija: 4 bytes · Solicitud típica: 10-20 bytes total · 10× más pequeño que HTTP</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Comparison table -->
+  <div class="section">
+    <div class="section-label">06 — Comparativa final</div>
+    <h2>MQTT vs CoAP vs HTTP</h2>
+
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Característica</th>
+          <th>MQTT</th>
+          <th>CoAP</th>
+          <th>HTTP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Paradigma</td>
+          <td>Pub/Sub (MOM)</td>
+          <td>REST (req/resp)</td>
+          <td>REST (req/resp)</td>
+        </tr>
+        <tr>
+          <td>Transporte</td>
+          <td>TCP</td>
+          <td>UDP</td>
+          <td>TCP</td>
+        </tr>
+        <tr>
+          <td>Cabecera mínima</td>
+          <td>2 bytes</td>
+          <td>4 bytes (10-20 total)</td>
+          <td>~200-800 bytes</td>
+        </tr>
+        <tr>
+          <td>Broker necesario</td>
+          <td>Sí (central)</td>
+          <td>No (directo)</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td>QoS</td>
+          <td>0, 1, 2</td>
+          <td>CON / NON</td>
+          <td>Depende de TCP</td>
+        </tr>
+        <tr>
+          <td>Multidifusión</td>
+          <td>No nativo</td>
+          <td>Sí (IP multicast)</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td>Seguridad</td>
+          <td>TLS sobre TCP</td>
+          <td>DTLS sobre UDP</td>
+          <td>TLS (HTTPS)</td>
+        </tr>
+        <tr>
+          <td>Ideal para</td>
+          <td>Sensores con conectividad limitada, datos frecuentes, muchos dispositivos</td>
+          <td>Dispositivos M2M muy restringidos, REST-like sin HTTP</td>
+          <td>APIs web, plataformas, cuando recursos no son limitados</td>
+        </tr>
+        <tr>
+          <td>Estándar</td>
+          <td>OASIS / ISO 20922</td>
+          <td>IETF RFC 7252</td>
+          <td>IETF RFC 2616</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 6 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>

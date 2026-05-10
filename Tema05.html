@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT – Tema 5: Docker, Contenedores y Microservicios</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6357/6357665.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #F0F3F5;
+    --surface: #FAFCFD;
+    --surface2: #E2E8ED;
+    --ink: #141C22;
+    --ink2: #3A4650;
+    --ink3: #7A8D9A;
+    --accent: #0A6B9A;
+    --accent2: #0D7A5F;
+    --accent3: #C45A0A;
+    --accent4: #6B35A8;
+    --border: rgba(20,28,34,0.1);
+    --border-strong: rgba(20,28,34,0.22);
+    --docker-blue: #0A6B9A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    background: #141C22;
+    color: #F0F3F5;
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: 'T5';
+    font-family: 'Syne', sans-serif;
+    font-size: 18rem;
+    font-weight: 800;
+    position: absolute;
+    right: -1rem;
+    top: -3rem;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .subject-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #5BC0EB;
+    background: rgba(91,192,235,0.12);
+    border: 1px solid rgba(91,192,235,0.3);
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: #F0F3F5;
+  }
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: rgba(240,243,245,0.45);
+    margin-top: 0.75rem;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 1.25rem; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 0.6rem; }
+  p { margin-bottom: 0.8rem; color: var(--ink2); }
+  p:last-child { margin-bottom: 0; }
+  .section { margin-bottom: 3.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border-strong); margin: 2.5rem 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; color: var(--ink2); }
+
+  /* Exam box */
+  .exam-box {
+    background: #FEF5ED;
+    border: 1.5px solid #E8A055;
+    border-left: 4px solid var(--accent3);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .exam-box-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--accent3); margin-bottom: 0.5rem; }
+  .exam-box p { font-size: 14px; color: var(--ink2); margin-bottom: 0.4rem; }
+
+  /* VM vs Container comparison */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    margin-bottom: 2rem;
+  }
+  .cmp-card { background: var(--surface); padding: 1.4rem 1.5rem; }
+  .cmp-card::before {
+    content: attr(data-label);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .cmp-card.vm::before { color: var(--accent3); }
+  .cmp-card.cont::before { color: var(--accent); }
+  .cmp-card h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+  .cmp-card ul { list-style: none; font-size: 13px; color: var(--ink2); }
+  .cmp-card ul li { padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; align-items: baseline; }
+  .cmp-card ul li:last-child { border-bottom: none; }
+  .cmp-card ul li::before { content: '›'; flex-shrink: 0; color: var(--ink3); }
+
+  /* Architecture layers */
+  .arch-layers { display: flex; flex-direction: column; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .arch-layer { background: var(--surface); padding: 0.75rem 1.3rem; display: flex; align-items: center; gap: 1rem; }
+  .arch-layer-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; min-width: 200px; color: var(--accent); }
+  .arch-layer-desc { font-size: 13px; color: var(--ink2); }
+  .arch-layer.os { background: var(--surface2); }
+  .arch-layer.os .arch-layer-name { color: var(--ink); }
+
+  /* Dockerfile keywords */
+  .df-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .df-cell { background: var(--surface); padding: 0.9rem 1.1rem; display: flex; gap: 10px; align-items: flex-start; }
+  .df-keyword { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 500; color: #0D7A5F; min-width: 110px; flex-shrink: 0; padding-top: 2px; }
+  .df-desc { font-size: 13px; color: var(--ink2); }
+
+  /* Compose terms */
+  .compose-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .compose-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .compose-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .compose-table tr:nth-child(even) td { background: var(--surface); }
+  .compose-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent); white-space: nowrap; }
+
+  /* Code block */
+  .code-block {
+    background: #141C22;
+    color: #8BE0B0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    padding: 1.2rem 1.5rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+  }
+  .code-block .comment { color: #5A7A8A; }
+  .code-block .keyword { color: #5BC0EB; }
+  .code-block .string { color: #F0C080; }
+  .code-block .cmd { color: #E0A0C0; }
+
+  /* Distributed patterns */
+  .pattern-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .pattern-card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); padding: 1.1rem 1.3rem; }
+  .pattern-card.green { border-top-color: var(--accent2); }
+  .pattern-card.orange { border-top-color: var(--accent3); }
+  .pattern-card.purple { border-top-color: var(--accent4); }
+  .pattern-card h3 { font-size: 0.92rem; margin-bottom: 0.5rem; }
+  .pattern-card p { font-size: 13px; }
+
+  /* Copy-on-write visual */
+  .cow-box { background: var(--surface); border: 1px solid var(--border-strong); padding: 1.3rem 1.5rem; margin-bottom: 1.5rem; }
+  .cow-layer { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .cow-layer:last-child { border-bottom: none; }
+  .cow-layer-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink3); min-width: 60px; }
+  .cow-layer-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; min-width: 160px; color: var(--accent); }
+  .cow-layer-desc { font-size: 13px; color: var(--ink2); }
+  .cow-layer.rw .cow-layer-name { color: var(--accent2); }
+  .cow-layer.ro .cow-layer-name { color: var(--ink3); }
+
+  /* Docker components */
+  .docker-comp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .dc-card { background: var(--surface); border: 1px solid var(--border); padding: 1.1rem; text-align: center; }
+  .dc-icon { font-size: 1.5rem; margin-bottom: 0.4rem; display: block; }
+  .dc-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--accent); margin-bottom: 0.4rem; }
+  .dc-card p { font-size: 12.5px; }
+
+  /* Key box dark */
+  .key-box { background: var(--ink); color: var(--bg); padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .key-box-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #5BC0EB; margin-bottom: 0.75rem; }
+  .key-box ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 2rem; }
+  .key-box ul li { font-size: 14px; color: rgba(240,243,245,0.85); display: flex; gap: 8px; align-items: baseline; }
+  .key-box ul li::before { content: '—'; color: #5BC0EB; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  .page-footer { background: var(--surface2); border-top: 1px solid var(--border-strong); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); }
+
+  /* Two col simple */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .grid-card { background: var(--surface); padding: 1.3rem 1.5rem; }
+  .grid-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .grid-card p { font-size: 13.5px; }
+
+  /* Compose example */
+  .compose-example { background: #141C22; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.8; }
+  .yml-key { color: #5BC0EB; }
+  .yml-val { color: #F0C080; }
+  .yml-comment { color: #3A5A6A; }
+  .yml-section { color: #8BE0B0; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>Contenedores Docker</h1>
+  <p class="subtitle">Tema 5 &nbsp;·&nbsp; Contenedores, imágenes, Dockerfile, Docker Compose, patrones de aplicaciones distribuidas</p>
+</header>
+
+<div class="container">
+
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Lo que pregunta el profe (del PDF)</div>
+    <p>Hay que saber <strong>hacer un Dockerfile y un docker-compose.yml</strong>. Componentes clave de Docker: <strong>Imágenes, Contenedores y Docker Daemon</strong> (no Hipervisor, no Kernel dedicado — son de VMs). Concepto de <strong>Copy-on-write</strong>.</p>
+    <p>Relacionar términos de Docker-Compose: <code>build</code>, <code>image</code>, <code>ports</code>, <code>volumes</code>, <code>links</code>, <code>services</code>, <code>environment</code>, <code>bind mounts</code>.</p>
+  </div>
+
+  <!-- SECTION 1: Qué son los contenedores -->
+  <div class="section">
+    <div class="section-label">01 — Qué son los contenedores y por qué existen</div>
+    <h2>El problema que resuelven los contenedores</h2>
+    <p>En entornos con muchas aplicaciones ejecutándose en los mismos servidores, cada app tiene dependencias (frameworks, librerías, versiones) que pueden entrar en conflicto. La solución primitiva fue usar <strong>máquinas virtuales</strong> (una app por VM), pero son pesadas — cada VM incluye un SO completo entero.</p>
+
+    <div class="compare-grid">
+      <div class="cmp-card vm" data-label="Solución antigua — Máquinas Virtuales">
+        <h3>Máquinas Virtuales (VM)</h3>
+        <ul>
+          <li>Hipervisor gestiona múltiples VMs sobre el hardware</li>
+          <li>Cada VM incluye su propio SO completo (Linux, Windows Server…)</li>
+          <li>Arranque lento (minutos)</li>
+          <li>Alto consumo de RAM y disco</li>
+          <li>Aislamiento fuerte pero ineficiente</li>
+          <li>Una app por VM = recursos muy desaprovechados</li>
+        </ul>
+      </div>
+      <div class="cmp-card cont" data-label="Solución actual — Contenedores">
+        <h3>Contenedores Docker</h3>
+        <ul>
+          <li>Comparten el kernel del SO anfitrión</li>
+          <li>Solo empaquetan la app + sus dependencias</li>
+          <li>Arranque muy rápido (segundos o menos)</li>
+          <li>Consumo mínimo de RAM y disco</li>
+          <li>Aislamiento mediante namespaces y cgroups de Linux</li>
+          <li>Muchos contenedores por host sin problemas de compatibilidad</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.92rem;margin-bottom:0.5rem;">Definición formal</h3>
+      <p style="font-size:13.5px;">Un contenedor es una <strong>unidad estándar de software</strong> que empaqueta el código y todas sus dependencias para que la aplicación se ejecute de forma rápida y confiable en cualquier entorno. Una <strong>imagen Docker</strong> es un paquete ligero, independiente y ejecutable que incluye: código, tiempo de ejecución, herramientas del sistema, librerías y configuraciones.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: Arquitectura Docker -->
+  <div class="section">
+    <div class="section-label">02 — Arquitectura interna de Docker</div>
+    <h2>Los 3 componentes clave de Docker</h2>
+
+    <div class="exam-box" style="margin-bottom:1.5rem;">
+      <div class="exam-box-title">⚠ Pregunta directa — componentes clave de Docker</div>
+      <p>Las respuestas correctas son: <strong>Imágenes</strong>, <strong>Contenedores</strong> y <strong>Docker Daemon</strong>.<br>
+      Incorrectas: Hipervisor (es de VMs), Kernel dedicado (los contenedores comparten el kernel del host).</p>
+    </div>
+
+    <div class="docker-comp">
+      <div class="dc-card">
+        <span class="dc-icon">📦</span>
+        <div class="dc-name">Imágenes (Images)</div>
+        <p>Plantillas de solo lectura (inmutables) formadas por capas. A partir de ellas se crean los contenedores. Se almacenan en Docker Hub o registros privados.</p>
+      </div>
+      <div class="dc-card">
+        <span class="dc-icon">🚀</span>
+        <div class="dc-name">Contenedores</div>
+        <p>Instancias en ejecución de una imagen. Tienen una capa de escritura encima de las capas de imagen (read-only). Múltiples contenedores pueden compartir la misma imagen.</p>
+      </div>
+      <div class="dc-card">
+        <span class="dc-icon">⚙️</span>
+        <div class="dc-name">Docker Daemon</div>
+        <p>Proceso en segundo plano que gestiona el ciclo de vida de los contenedores. Expone una API REST. La CLI de Docker es su cliente principal.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Capas de la arquitectura Docker</h3>
+    <div class="arch-layers">
+      <div class="arch-layer">
+        <span class="arch-layer-name">CLI / API REST</span>
+        <span class="arch-layer-desc">Interfaz de usuario (docker run, docker build…) y API REST para automatización</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-name">Docker Engine</span>
+        <span class="arch-layer-desc">Funcionalidad adicional: redes, plugins, orquestación. Consume la API REST de containerd.</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-name">containerd + runc</span>
+        <span class="arch-layer-desc">Runtime del contenedor. Gestiona el ciclo completo: pull de imagen → creación → arranque → parada → eliminación.</span>
+      </div>
+      <div class="arch-layer os">
+        <span class="arch-layer-name" style="color:var(--ink);">Linux OS (kernel)</span>
+        <span class="arch-layer-desc" style="color:var(--ink2);">Namespaces (pid, net, mnt, uts, ipc) + cgroups para aislamiento y limitación de recursos. Base de todo.</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="grid-card">
+        <h3>Namespaces de Linux</h3>
+        <p style="font-size:13px;">Permiten aislar procesos que se ejecutan dentro del contenedor. Tipos: <strong>pid</strong> (procesos), <strong>net</strong> (red), <strong>mnt</strong> (sistema de archivos), <strong>uts</strong> (hostname), <strong>ipc</strong> (comunicación entre procesos).</p>
+      </div>
+      <div class="grid-card">
+        <h3>Proyecto Moby</h3>
+        <p style="font-size:13px;">Paraguas de código abierto de Docker que separa la parte open source de la comercial. El motor Docker original era monolítico; Moby lo fragmentó en componentes reutilizables independientes (containerd, runc, libnetwork…).</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Imágenes y capas -->
+  <div class="section">
+    <div class="section-label">03 — Imágenes, capas y Copy-on-Write</div>
+    <h2>Cómo funcionan las imágenes Docker</h2>
+
+    <p>Las imágenes son <strong>pilas de capas inmutables</strong>. Cada capa contiene solo los cambios respecto a la capa anterior. Docker usa un <strong>sistema de archivos de unión</strong> (Union FS) para presentarlos como un único sistema de archivos al contenedor.</p>
+
+    <div class="cow-box">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:0.75rem;">Ejemplo: imagen Alpine + Nginx + App Web</div>
+      <div class="cow-layer rw">
+        <span class="cow-layer-num">CAPA 4</span>
+        <span class="cow-layer-name">Container Layer (RW)</span>
+        <span class="cow-layer-desc">Capa de escritura añadida al crear el contenedor. Todos los cambios en ejecución van aquí.</span>
+      </div>
+      <div class="cow-layer ro">
+        <span class="cow-layer-num">CAPA 3</span>
+        <span class="cow-layer-name">App Web (HTML/CSS/JS)</span>
+        <span class="cow-layer-desc">Archivos de la aplicación. Inmutable (read-only).</span>
+      </div>
+      <div class="cow-layer ro">
+        <span class="cow-layer-num">CAPA 2</span>
+        <span class="cow-layer-name">Nginx</span>
+        <span class="cow-layer-desc">Servidor web añadido sobre Alpine. Inmutable.</span>
+      </div>
+      <div class="cow-layer ro">
+        <span class="cow-layer-num">CAPA 1 (base)</span>
+        <span class="cow-layer-name">Alpine Linux</span>
+        <span class="cow-layer-desc">Imagen base mínima. Inmutable. Normalmente viene de Docker Hub.</span>
+      </div>
+    </div>
+
+    <div class="key-box" style="margin-bottom:1.5rem;">
+      <div class="key-box-label">copy-on-write (CoW) — concepto clave de examen</div>
+      <ul>
+        <li>Estrategia para compartir y copiar archivos con máxima eficiencia</li>
+        <li>Si una capa solo <em>usa</em> un archivo de una capa inferior → lo usa directamente</li>
+        <li>Si una capa quiere <em>modificar</em> un archivo de una capa inferior → lo copia primero a su capa y luego lo modifica</li>
+        <li>Las capas de imagen son siempre inmutables (read-only)</li>
+        <li>Solo la capa del contenedor (la más alta) es read/write</li>
+        <li>Múltiples contenedores pueden compartir las mismas capas de imagen</li>
+        <li>Resultado: uso mínimo de disco y arranque ultrarrápido</li>
+        <li>Controlador de gráficos (storage driver) gestiona la interacción entre capas</li>
+      </ul>
+    </div>
+
+    <div class="two-col">
+      <div class="grid-card">
+        <h3>Docker Hub</h3>
+        <p style="font-size:13px;">Registro público de imágenes de contenedores. Repositorios privados y públicos. Builds automáticas desde GitHub/Bitbucket. Es el origen habitual de las imágenes base (Alpine, Ubuntu, CentOS, Node, Python…).</p>
+      </div>
+      <div class="grid-card">
+        <h3>3 formas de crear una imagen</h3>
+        <p style="font-size:13px;"><strong>1. Interactiva</strong> — arrancar contenedor, modificar, hacer docker commit. Solo para prototipos.<br>
+        <strong>2. Dockerfile</strong> — la forma correcta. Declarativa, repetible, escalable.<br>
+        <strong>3. Importar tarball</strong> — importar desde un fichero .tar.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Dockerfile -->
+  <div class="section">
+    <div class="section-label">04 — Dockerfile</div>
+    <h2>Instrucciones del Dockerfile</h2>
+    <p>Un Dockerfile es un <strong>fichero de texto declarativo</strong> que describe cómo construir una imagen personalizada. Cada instrucción genera una nueva capa en la imagen resultante. Por convención las palabras clave van en MAYÚSCULAS.</p>
+
+    <div class="df-grid">
+      <div class="df-cell">
+        <span class="df-keyword">FROM</span>
+        <span class="df-desc">Define la imagen base desde la que se parte. Siempre la primera línea. <code>FROM scratch</code> = imagen vacía (sin generar capa). Ej: <code>FROM node:9.4</code>, <code>FROM alpine</code>.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">RUN</span>
+        <span class="df-desc">Ejecuta un comando dentro del contenedor durante la construcción. Ej: instalar paquetes (<code>apt-get install</code>, <code>yum install</code>, <code>npm install</code>). Cada RUN es una capa.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">COPY</span>
+        <span class="df-desc">Copia ficheros/carpetas del host a la imagen. Sintaxis: <code>COPY &lt;origen&gt; &lt;destino&gt;</code>. Solo archivos locales.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">ADD</span>
+        <span class="df-desc">Como COPY pero con superpoderes: también descomprime TARs y acepta URLs como origen. Usar COPY cuando no se necesiten estas funciones extra.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">WORKDIR</span>
+        <span class="df-desc">Define el directorio de trabajo para las instrucciones siguientes (RUN, CMD, ENTRYPOINT, COPY, ADD). Persiste entre capas. Diferente de <code>cd</code> que no persiste.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">ENV</span>
+        <span class="df-desc">Define variables de entorno disponibles durante la construcción y en el contenedor en ejecución. Ej: <code>ENV NODE_ENV=production</code>.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">EXPOSE</span>
+        <span class="df-desc">Documenta en qué puerto escucha el contenedor. No publica el puerto — solo es informativo. Para publicar hay que usar -p en docker run o ports: en compose.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">CMD</span>
+        <span class="df-desc">Comando por defecto al iniciar el contenedor. Puede sobreescribirse en <code>docker run</code>. Formato JSON recomendado: <code>CMD ["npm", "start"]</code>.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">ENTRYPOINT</span>
+        <span class="df-desc">Define el ejecutable principal del contenedor. Más difícil de sobreescribir que CMD. Se combina con CMD: ENTRYPOINT es el comando, CMD son los argumentos por defecto.</span>
+      </div>
+      <div class="df-cell">
+        <span class="df-keyword">VOLUME</span>
+        <span class="df-desc">Declara un punto de montaje de volumen. Los datos en ese directorio persisten fuera del contenedor y se pueden compartir entre contenedores.</span>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Ejemplo completo — app Node.js</h3>
+    <div class="code-block">
+<span class="comment"># 1. Imagen base</span>
+<span class="keyword">FROM</span> <span class="string">node:9.4</span>
+
+<span class="comment"># 2. Crear directorio de trabajo</span>
+<span class="keyword">RUN</span> mkdir -p /app
+
+<span class="comment"># 3. Establecer contexto</span>
+<span class="keyword">WORKDIR</span> /app
+
+<span class="comment"># 4. Instalar dependencias primero (capa separada → caché más eficiente)</span>
+<span class="keyword">COPY</span> package.json /app/
+<span class="keyword">RUN</span> npm install
+
+<span class="comment"># 5. Copiar el resto del código fuente</span>
+<span class="keyword">COPY</span> . /app
+
+<span class="comment"># 6. Exponer puerto</span>
+<span class="keyword">EXPOSE</span> <span class="string">3000</span>
+
+<span class="comment"># 7. Comando de arranque</span>
+<span class="keyword">CMD</span> ["npm", "start"]
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Proceso de construcción — docker build</h3>
+    <div class="code-block">
+<span class="comment"># Construir imagen con tag</span>
+<span class="cmd">docker build</span> -t my-app:1.0 .
+
+<span class="comment"># Ver imágenes locales</span>
+<span class="cmd">docker images</span>
+
+<span class="comment"># Ejecutar contenedor</span>
+<span class="cmd">docker run</span> -d -p 3000:3000 my-app:1.0
+
+<span class="comment"># Ver diferencias respecto a imagen base</span>
+<span class="cmd">docker container diff</span> &lt;container_id&gt;
+    </div>
+
+    <p style="font-size:13.5px;background:var(--surface);border:1px solid var(--border);padding:0.9rem 1.2rem;"><strong>Proceso de build:</strong> Para cada instrucción del Dockerfile, Docker crea un contenedor temporal a partir de la imagen anterior, ejecuta la instrucción, guarda el resultado como nueva capa, y elimina el contenedor temporal. Se repite hasta la última instrucción.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Docker Compose -->
+  <div class="section">
+    <div class="section-label">05 — Docker Compose</div>
+    <h2>Orquestación de múltiples contenedores</h2>
+
+    <p>Docker Compose permite definir y ejecutar <strong>aplicaciones multi-contenedor</strong> con un único fichero YAML (<code>docker-compose.yml</code>). Un solo comando (<code>docker compose up</code>) arranca todos los servicios definidos.</p>
+
+    <h3 style="margin-bottom:0.75rem;">Términos clave de Docker-Compose — <em>pregunta directa de examen</em></h3>
+
+    <table class="compose-table">
+      <thead>
+        <tr>
+          <th>Término</th>
+          <th>Definición</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>services</td>
+          <td>Sección principal. Define cada uno de los contenedores/microservicios que componen la aplicación (ej: web, db, redis).</td>
+        </tr>
+        <tr>
+          <td>image</td>
+          <td>Especifica la imagen Docker que se usará para ese servicio (de Docker Hub o registro privado). Ej: <code>image: postgres:14</code>.</td>
+        </tr>
+        <tr>
+          <td>build</td>
+          <td>Ruta al Dockerfile para construir la imagen del servicio en lugar de usar una imagen ya existente. Ej: <code>build: ./app</code>.</td>
+        </tr>
+        <tr>
+          <td>ports</td>
+          <td>Mapea puertos del host al contenedor. Formato: <code>"puerto_host:puerto_contenedor"</code>. Ej: <code>"3000:3000"</code>.</td>
+        </tr>
+        <tr>
+          <td>volumes</td>
+          <td>Monta volúmenes o directorios del host en el contenedor para persistir datos. Ej: <code>- pets-data:/var/lib/postgresql/data</code>.</td>
+        </tr>
+        <tr>
+          <td>bind mounts</td>
+          <td>Tipo de volumen que mapea un directorio específico del host directamente al contenedor. Los cambios en el host se reflejan inmediatamente (útil en desarrollo).</td>
+        </tr>
+        <tr>
+          <td>environment</td>
+          <td>Define variables de entorno para el contenedor. Ej: <code>POSTGRES_PASSWORD: secret</code>.</td>
+        </tr>
+        <tr>
+          <td>links</td>
+          <td>Conecta servicios entre sí (legacy). Permite que un servicio resuelva el nombre del otro por DNS interno. Hoy se prefiere usar redes definidas por usuario.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:0.75rem;">Ejemplo de docker-compose.yml completo</h3>
+    <div class="compose-example">
+<span class="yml-comment"># Versión del formato de Docker Compose</span>
+<span class="yml-key">version:</span> <span class="yml-val">'3.5'</span>
+
+<span class="yml-section">services:</span>
+
+  <span class="yml-key">web:</span>                              <span class="yml-comment"># Servicio 1: aplicación web</span>
+    <span class="yml-key">build:</span> <span class="yml-val">./web</span>                    <span class="yml-comment"># Construir desde Dockerfile en ./web</span>
+    <span class="yml-key">ports:</span>
+      - <span class="yml-val">"3000:3000"</span>                <span class="yml-comment"># host:contenedor</span>
+    <span class="yml-key">environment:</span>
+      - <span class="yml-val">NODE_ENV=production</span>
+    <span class="yml-key">links:</span>
+      - <span class="yml-val">db</span>                         <span class="yml-comment"># puede resolver "db" por DNS</span>
+
+  <span class="yml-key">db:</span>                               <span class="yml-comment"># Servicio 2: base de datos</span>
+    <span class="yml-key">image:</span> <span class="yml-val">postgres:14</span>              <span class="yml-comment"># Usar imagen de Docker Hub</span>
+    <span class="yml-key">volumes:</span>
+      - <span class="yml-val">pets-data:/var/lib/postgresql/data</span>
+    <span class="yml-key">environment:</span>
+      - <span class="yml-val">POSTGRES_PASSWORD=secret</span>
+
+<span class="yml-section">volumes:</span>                           <span class="yml-comment"># Declarar volúmenes usados</span>
+  <span class="yml-key">pets-data:</span>                        <span class="yml-comment"># Se reutiliza entre reinicios</span>
+    </div>
+
+    <div class="code-block">
+<span class="comment"># Levantar toda la aplicación en background</span>
+<span class="cmd">docker compose up</span> -d
+
+<span class="comment"># Ver estado de los servicios</span>
+<span class="cmd">docker compose ps</span>
+
+<span class="comment"># Escalar un servicio a 3 instancias</span>
+<span class="cmd">docker compose up</span> --scale web=3
+
+<span class="comment"># Parar y eliminar contenedores</span>
+<span class="cmd">docker compose down</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Arquitectura distribuida -->
+  <div class="section">
+    <div class="section-label">06 — Arquitecturas distribuidas y microservicios</div>
+    <h2>Monolítico vs. Distribuido</h2>
+
+    <div class="compare-grid">
+      <div class="cmp-card vm" data-label="Arquitectura monolítica (tradicional)">
+        <h3>Aplicación Monolítica</h3>
+        <ul>
+          <li>Un único binario en un servidor con nombre + IP fija</li>
+          <li>Módulos estrechamente acoplados</li>
+          <li>Escalar = escalar todo el sistema</li>
+          <li>Un fallo puede tumbar todo</li>
+          <li>Despliegue más simple</li>
+        </ul>
+      </div>
+      <div class="cmp-card cont" data-label="Arquitectura distribuida (microservicios)">
+        <h3>Aplicación Distribuida</h3>
+        <ul>
+          <li>Múltiples servicios débilmente acoplados</li>
+          <li>Servidores sin nombres amigables (UUIDs)</li>
+          <li>Escalar = escalar solo el servicio que lo necesita</li>
+          <li>Fallos aislados (circuit breaker)</li>
+          <li>Mayor complejidad de gestión</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 style="margin-top:1.5rem;">Patrones y atributos de una app distribuida</h2>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h3>Componentes débilmente acoplados</h3>
+        <p>Cada servicio solo conoce la <strong>interfaz pública</strong> de los otros, no su implementación interna. Durante el desarrollo se usan stubs o mocks para simular otros componentes. Clave para desarrollar en paralelo.</p>
+      </div>
+      <div class="pattern-card green">
+        <h3>Stateful vs. Stateless</h3>
+        <p><strong>Stateless</strong>: no crea ni modifica datos persistentes. Fácil de escalar, mover entre nodos y reiniciar. <strong>Stateful</strong>: crea datos persistentes (bases de datos, ficheros). Más complejo de gestionar en arquitecturas distribuidas.</p>
+      </div>
+      <div class="pattern-card orange">
+        <h3>Descubrimiento de Servicios (DNS)</h3>
+        <p>El Servicio A no sabe en qué nodo corre el Servicio B. Existe una <strong>autoridad externa</strong> (servicio DNS) que conoce la topología y devuelve la IP+puerto cuando se le pregunta. Docker y Kubernetes tienen DNS interno integrado.</p>
+      </div>
+      <div class="pattern-card purple">
+        <h3>Balance de Carga (Load Balancing)</h3>
+        <p>Cuando un servicio tiene múltiples instancias, un <strong>load balancer</strong> distribuye las peticiones entre ellas. Algoritmo más común: <strong>round robin</strong> (asigna en orden: 1→2→3→1→2…).</p>
+      </div>
+      <div class="pattern-card green">
+        <h3>Reintentos (Retry pattern)</h3>
+        <p>Si una llamada falla o expira, se reintenta tras un breve espera. Cada reintento aumenta el tiempo de espera. Tras N intentos se abandona y se devuelve <strong>servicio degradado</strong> (datos en caché o vacíos).</p>
+      </div>
+      <div class="pattern-card orange">
+        <h3>Gestión de errores — Fail Fast</h3>
+        <p>Los errores irrecuperables deben detectarse lo antes posible y hacer que el servicio <strong>falle inmediatamente</strong>. Siempre loguear en STDERR/STDOUT información útil para diagnóstico.</p>
+      </div>
+      <div class="pattern-card purple">
+        <h3>Redundancia</h3>
+        <p>Cada componente debe ejecutarse en <strong>múltiples instancias en nodos diferentes</strong>. También la infraestructura (routers, load balancers). Objetivo: ningún punto único de fallo (SPOF).</p>
+      </div>
+      <div class="pattern-card">
+        <h3>Circuit Breaker</h3>
+        <p>Evita <strong>fallos en cascada</strong>. Monitorea las llamadas al Servicio B. Si el número de fallos supera un umbral, el "interruptor se dispara" y corta las llamadas al servicio defectuoso temporalmente. Como un fusible eléctrico.</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top:0.5rem;">Estrategias de despliegue sin tiempo de inactividad</h2>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h3>🔵🟢 Despliegues Azul-Verde</h3>
+        <p><strong>Azul</strong> = versión actual en producción (todo el tráfico). Se despliega <strong>Verde</strong> = nueva versión en paralelo. Se ejecutan smoke tests sobre Verde. Si pasan, el router redirige todo el tráfico a Verde. Si Verde falla, volver a Azul inmediatamente.</p>
+      </div>
+      <div class="pattern-card green">
+        <h3>🐦 Canary Releases</h3>
+        <p>Despliegue gradual. Versión nueva recibe inicialmente el <strong>1% del tráfico</strong>, se monitoriza, si está bien se sube a 5%, luego más… hasta el 100%. Si algo falla en cualquier punto, se revierte. Reduce el riesgo de nuevas versiones.</p>
+      </div>
+      <div class="pattern-card orange">
+        <h3>Rollback</h3>
+        <p>Recuperación cuando una actualización introduce errores no detectados en pruebas. <strong>Siempre debe estar planificado y probado</strong> — no es un plan B, es parte del proceso. En apps distribuidas con contenedores es sencillo: volver a la imagen anterior.</p>
+      </div>
+      <div class="pattern-card purple">
+        <h3>Cambios de datos irreversibles</h3>
+        <p>Si hay un cambio de esquema irreversible en BD, hacerlo en <strong>3 fases</strong>: (1) migración compatible con versión anterior, (2) despliegue del nuevo código, (3) limpieza del esquema antiguo.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 5 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>

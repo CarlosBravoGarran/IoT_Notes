@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT – Tema 3: Sistemas Operativos Embebidos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #F2F0F5;
+    --surface: #FAFAF C;
+    --surface: #FAFAFC;
+    --surface2: #E6E3ED;
+    --ink: #18141F;
+    --ink2: #42394F;
+    --ink3: #8A7F9A;
+    --accent: #6B35B5;
+    --accent2: #1A5C8A;
+    --accent3: #B54A0A;
+    --accent4: #1A7A50;
+    --border: rgba(24,20,31,0.1);
+    --border-strong: rgba(24,20,31,0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    background: #18141F;
+    color: #F2F0F5;
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: 'T3';
+    font-family: 'Syne', sans-serif;
+    font-size: 18rem;
+    font-weight: 800;
+    position: absolute;
+    right: -1rem;
+    top: -3rem;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .subject-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #A97AF5;
+    background: rgba(169,122,245,0.12);
+    border: 1px solid rgba(169,122,245,0.3);
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: #F2F0F5;
+  }
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: rgba(242,240,245,0.45);
+    margin-top: 0.75rem;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+  p { margin-bottom: 0.8rem; color: var(--ink2); }
+  p:last-child { margin-bottom: 0; }
+  .section { margin-bottom: 3.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border-strong); margin: 2.5rem 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; color: var(--ink2); }
+
+  /* Exam box */
+  .exam-box {
+    background: #FEF5ED;
+    border: 1.5px solid #E8A055;
+    border-left: 4px solid var(--accent3);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .exam-box-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent3);
+    margin-bottom: 0.5rem;
+  }
+  .exam-box p { font-size: 14px; color: var(--ink2); margin-bottom: 0.4rem; }
+
+  /* OS type cards - the big 3 */
+  .os-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    margin-bottom: 2rem;
+  }
+  .os-card { background: var(--surface); padding: 1.4rem 1.5rem; position: relative; }
+  .os-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    margin-bottom: 1rem;
+  }
+  .os-card.monolitico::before { background: var(--accent3); }
+  .os-card.capas::before { background: var(--accent2); }
+  .os-card.microkernel::before { background: var(--accent); }
+
+  .os-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .os-card.monolitico .os-card-label { color: var(--accent3); }
+  .os-card.capas .os-card-label { color: var(--accent2); }
+  .os-card.microkernel .os-card-label { color: var(--accent); }
+
+  .os-card h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+  .os-card p { font-size: 13px; }
+  .os-card ul { list-style: none; font-size: 13px; color: var(--ink2); margin-top: 0.6rem; }
+  .os-card ul li { padding: 3px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+  .os-card ul li:last-child { border-bottom: none; }
+  .os-card ul li::before { content: '›'; color: var(--ink3); flex-shrink: 0; }
+
+  /* OS examples badges */
+  .os-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    border: 1px solid;
+    margin: 4px 3px 0 0;
+  }
+  .os-badge.mono { border-color: rgba(181,74,10,0.4); color: var(--accent3); background: rgba(181,74,10,0.06); }
+  .os-badge.layer { border-color: rgba(26,92,138,0.4); color: var(--accent2); background: rgba(26,92,138,0.06); }
+  .os-badge.micro { border-color: rgba(107,53,181,0.4); color: var(--accent); background: rgba(107,53,181,0.06); }
+
+  /* Layer stack visual */
+  .layer-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .layer-row { display: flex; align-items: center; padding: 0.7rem 1.2rem; gap: 1rem; background: var(--surface); }
+  .layer-row:nth-child(even) { background: var(--surface2); }
+  .layer-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    min-width: 220px;
+    color: var(--accent);
+  }
+  .layer-desc { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+
+  /* Process management table */
+  .proc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .proc-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .proc-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .proc-table tr:nth-child(even) td { background: var(--surface); }
+  .proc-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent2); white-space: nowrap; }
+
+  /* Scheduler performance table */
+  .sched-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .sched-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .sched-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .sched-table tr:nth-child(even) td { background: var(--surface); }
+  .sched-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent3); }
+
+  /* Raspberry Pi OS components */
+  .raspi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .raspi-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 1.1rem 1.3rem; }
+  .raspi-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10.5px; }
+  .raspi-card p { font-size: 13px; }
+
+  /* Fork/exec/spawn visual */
+  .process-model {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    margin-bottom: 1.5rem;
+  }
+  .pm-card { background: var(--surface); padding: 1.2rem 1.3rem; }
+  .pm-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; display: block; }
+  .pm-card p { font-size: 13px; }
+
+  /* Memory management grid */
+  .mem-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .mem-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.2rem; }
+  .mem-card h3 { font-size: 0.88rem; margin-bottom: 0.4rem; }
+  .mem-card p { font-size: 13px; }
+
+  /* Requirements grid */
+  .req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .req-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.2rem; text-align: center; }
+  .req-icon { font-size: 1.4rem; margin-bottom: 0.4rem; display: block; }
+  .req-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--accent); margin-bottom: 0.3rem; }
+  .req-card p { font-size: 12.5px; }
+
+  /* Key box dark */
+  .key-box { background: var(--ink); color: var(--bg); padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .key-box-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #A97AF5; margin-bottom: 0.75rem; }
+  .key-box ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 2rem; }
+  .key-box ul li { font-size: 14px; color: rgba(242,240,245,0.85); display: flex; gap: 8px; align-items: baseline; }
+  .key-box ul li::before { content: '—'; color: #A97AF5; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  /* Driver functions table */
+  .driver-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .driver-cell { background: var(--surface); padding: 0.8rem 1.1rem; display: flex; gap: 10px; align-items: baseline; }
+  .driver-name { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 500; color: var(--accent2); min-width: 160px; flex-shrink: 0; }
+  .driver-desc { font-size: 13px; color: var(--ink2); }
+
+  .page-footer { background: var(--surface2); border-top: 1px solid var(--border-strong); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); }
+
+  /* Comparison two-col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .grid-card { background: var(--surface); padding: 1.3rem 1.5rem; }
+  .grid-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .grid-card p { font-size: 13.5px; }
+
+  /* OS names examples big table */
+  .os-names-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .os-names-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .os-names-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: middle; }
+  .os-names-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--ink); }
+  .os-names-table td:nth-child(2) { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .os-names-table tr:nth-child(even) td { background: var(--surface); }
+  .badge-mono { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; background: rgba(181,74,10,0.1); color: var(--accent3); border: 1px solid rgba(181,74,10,0.3); }
+  .badge-layer { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; background: rgba(26,92,138,0.1); color: var(--accent2); border: 1px solid rgba(26,92,138,0.3); }
+  .badge-micro { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; background: rgba(107,53,181,0.1); color: var(--accent); border: 1px solid rgba(107,53,181,0.3); }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>Sistemas Operativos<br>Embebidos (IoT OS)</h1>
+  <p class="subtitle">Tema 3 &nbsp;·&nbsp; Estructura, gestión de procesos, memoria, drivers y tipos de SO embebidos</p>
+</header>
+
+<div class="container">
+
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Preguntas directas del PDF de teoría</div>
+    <p><strong>Clasificar SO como Monolítico, Microkernel o Layered:</strong> Contiki, Raspberry Pi OS, RIOT, FreeRTOS, TinyOS.</p>
+    <p><strong>Relacionar controladores de dispositivo</strong> con su acción (Hardware Startup, Shutdown, Disable, Enable, Acquire, Release, Read, Write, Install, Unmapping).</p>
+    <p><strong>Factores de rendimiento del planificador:</strong> Response Time, Turnaround Time, Overhead, Fairness, Throughput, Starvation — con sus definiciones exactas.</p>
+    <p><strong>Fork vs. exec vs. spawn</strong> — cuál crea qué.</p>
+  </div>
+
+  <!-- SECTION 1: Qué es un SO embebido -->
+  <div class="section">
+    <div class="section-label">01 — Qué es un sistema operativo embebido</div>
+    <h2>Definición y propósito</h2>
+    <p>Un SO embebido es un <strong>conjunto de bibliotecas de software</strong> que cumple dos funciones principales en un sistema embebido:</p>
+
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>1. Capa de abstracción</h3>
+        <p>El software sobre el SO es menos dependiente del hardware. Facilita el desarrollo de middleware y aplicaciones sin preocuparse del hardware específico subyacente.</p>
+      </div>
+      <div class="grid-card">
+        <h3>2. Gestión de recursos</h3>
+        <p>Administra hardware y software del sistema para garantizar que todo funcione de forma <strong>eficiente y confiable</strong>. Incluye CPU, memoria, E/S y dispositivos.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;color:var(--ink2);">⚠ El SO es <strong>opcional</strong> en sistemas embebidos — no todos los sistemas integrados tienen uno. Los más sencillos funcionan "bare metal" directamente sobre el hardware.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: Requisitos -->
+  <div class="section">
+    <div class="section-label">02 — Requisitos de un SO embebido</div>
+    <h2>Qué debe cumplir un SO para IoT</h2>
+
+    <div class="req-grid">
+      <div class="req-card">
+        <span class="req-icon">🧠</span>
+        <div class="req-name">Requisitos de CPU</div>
+        <p>Complejidad de operaciones muy baja. Algunas MCU funcionan a ciclos de reloj muy bajos.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">💾</span>
+        <div class="req-name">Requisitos de Memoria</div>
+        <p>Mínimos. Dispositivos IoT típicos tienen 5 kB a cientos de MB. Afecta RAM y almacenamiento persistente.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">🔧</span>
+        <div class="req-name">Características Limitadas</div>
+        <p>Funcionar sin MMU ni FPU (unidad de gestión de memoria / punto flotante). Hardware restringido.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">🔌</span>
+        <div class="req-name">Soporte de Plataformas</div>
+        <p>Ejecutarse en plataformas restringidas y aprovechar las capacidades de plataformas más potentes.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">⚡</span>
+        <div class="req-name">Eficiencia Energética</div>
+        <p>Bajo consumo. Modo de suspensión. Muchos dispositivos funcionan con baterías durante años.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">🌐</span>
+        <div class="req-name">Stack de Red Adaptativo</div>
+        <p>Soporte para protocolos IoT ligeros (6LoWPAN, MQTT, CoAP) adaptados a redes restringidas.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">🛡️</span>
+        <div class="req-name">Fiabilidad y Autonomía</div>
+        <p>Funcionar sin supervisión humana durante largos períodos. Tolerancia a fallos.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">📐</span>
+        <div class="req-name">API Estándar (POSIX)</div>
+        <p>Facilita el desarrollo y migración. POSIX incluye: procesos, señales, temporizadores, pipes, E/S, memoria compartida.</p>
+      </div>
+      <div class="req-card">
+        <span class="req-icon">💻</span>
+        <div class="req-name">Lenguajes Estándar</div>
+        <p>Soporte para C/C++ como mínimo. Vital para desarrollo de sistemas embebidos.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.75rem;">POSIX — qué incluye</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;font-size:13px;color:var(--ink2);">
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);display:block;margin-bottom:0.4rem;">POSIX.1 — Core</strong>
+          Creación/control de procesos, señales, temporizadores, operaciones de ficheros, pipes, biblioteca C estándar, ioctl.
+        </div>
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);display:block;margin-bottom:0.4rem;">POSIX.1b — Tiempo Real</strong>
+          Planificación con prioridad, señales RT, temporizadores, semáforos, paso de mensajes, memoria compartida, E/S asíncrona.
+        </div>
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);display:block;margin-bottom:0.4rem;">POSIX.1c — Threads</strong>
+          Creación/control/limpieza de hilos, planificación, sincronización, manejo de señales.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Tipos de SO -->
+  <div class="section">
+    <div class="section-label">03 — Tipos de SO embebidos</div>
+    <h2>Monolítico · En Capas · Microkernel</h2>
+
+    <div class="os-grid">
+      <div class="os-card monolitico">
+        <div class="os-card-label">Tipo 1</div>
+        <h3>Monolítico</h3>
+        <p style="font-size:13px;">Toda la funcionalidad (kernel + drivers + middleware) integrada en <strong>un único fichero ejecutable</strong>. Módulos de código separados dentro del mismo binario en la variante modular.</p>
+        <ul>
+          <li>Más difícil de reducir, modificar y depurar</li>
+          <li>Gran tamaño intrínseco con dependencias cruzadas</li>
+          <li>Variante modular: piezas de código que reflejan funciones</li>
+        </ul>
+        <div style="margin-top:0.75rem;">
+          <span class="os-badge mono">Linux</span>
+          <span class="os-badge mono">Raspberry Pi OS</span>
+        </div>
+      </div>
+
+      <div class="os-card capas">
+        <div class="os-card-label">Tipo 2</div>
+        <h3>En Capas (Layered)</h3>
+        <p style="font-size:13px;">SO dividido en <strong>capas jerárquicas (0…N)</strong>. Las capas superiores dependen de la funcionalidad de las inferiores. También un único fichero grande que incluye drivers y middleware.</p>
+        <ul>
+          <li>Más fácil de desarrollar y mantener que monolítico</li>
+          <li>Las APIs entre capas generan sobrecarga adicional</li>
+          <li>Afecta al tamaño y al rendimiento</li>
+        </ul>
+        <div style="margin-top:0.75rem;">
+          <span class="os-badge layer">TinyOS</span>
+          <span class="os-badge layer">Contiki</span>
+        </div>
+      </div>
+
+      <div class="os-card microkernel">
+        <div class="os-card-label">Tipo 3</div>
+        <h3>Microkernel (Cliente/Servidor)</h3>
+        <p style="font-size:13px;">Kernel reducido a <strong>mínima funcionalidad</strong> (solo gestión de procesos y memoria). Drivers extraídos del kernel completamente. Nanonúcleo = solo gestión de procesos.</p>
+        <ul>
+          <li>Más modular y mantenible</li>
+          <li>Drivers corren en espacio de usuario</li>
+          <li>Nanonúcleo: subclase aún más reducida</li>
+        </ul>
+        <div style="margin-top:0.75rem;">
+          <span class="os-badge micro">FreeRTOS</span>
+          <span class="os-badge micro">RIOT</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OS names table — exam critical -->
+    <h3 style="margin-bottom:0.75rem;">Clasificación de SO reales — <em>pregunta directa de examen</em></h3>
+    <table class="os-names-table">
+      <thead>
+        <tr>
+          <th>SO Embebido</th>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th>Uso típico</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Raspberry Pi OS (Raspbian)</td>
+          <td><span class="badge-mono">Monolítico</span></td>
+          <td>Basado en Linux (kernel monolítico modular). Bootloader → kernel → systemd → demonios → shell (Bash) → GUI (LXDE sobre X.Org).</td>
+          <td>Raspberry Pi, prototipos IoT con Linux completo</td>
+        </tr>
+        <tr>
+          <td>Contiki</td>
+          <td><span class="badge-layer">En Capas</span></td>
+          <td>SO ligero en capas para dispositivos de muy baja potencia. Soporte 6LoWPAN. Protothreads.</td>
+          <td>Sensores de bajo consumo, redes de sensores</td>
+        </tr>
+        <tr>
+          <td>TinyOS</td>
+          <td><span class="badge-layer">En Capas</span></td>
+          <td>Arquitectura basada en componentes y eventos. Diseñado para redes de sensores inalámbricos.</td>
+          <td>Redes de sensores (WSN), investigación</td>
+        </tr>
+        <tr>
+          <td>FreeRTOS</td>
+          <td><span class="badge-micro">Microkernel</span></td>
+          <td>RTOS de tiempo real. Kernel mínimo con planificador por prioridades. Muy portable. Usado en ESP32 (base de ESP-IDF).</td>
+          <td>Microcontroladores, ESP32, STM32, IoT industrial</td>
+        </tr>
+        <tr>
+          <td>RIOT</td>
+          <td><span class="badge-micro">Microkernel</span></td>
+          <td>SO para IoT con kernel en tiempo real. Soporte IPv6/6LoWPAN nativo. API POSIX parcial.</td>
+          <td>Dispositivos IoT con restricciones de memoria y energía</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Model layer diagrams -->
+    <h3 style="margin-bottom:0.75rem;">Modelos de capas de SO embebido</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem;">
+      <div>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Modelo 1 — Simple</p>
+        <div class="layer-stack" style="margin-bottom:0;">
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Application Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">System Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Operating System Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Board Support Package</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Device Drivers</span></div>
+          <div class="layer-row" style="background:#18141F;"><span class="layer-name" style="font-size:11px;color:#A97AF5;">Hardware Layer</span></div>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Modelo 2 — Con Middleware</p>
+        <div class="layer-stack" style="margin-bottom:0;">
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Application Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">System Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Middleware Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Operating System Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Device Drivers</span></div>
+          <div class="layer-row" style="background:#18141F;"><span class="layer-name" style="font-size:11px;color:#A97AF5;">Hardware Layer</span></div>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Modelo 3 — Integrado</p>
+        <div class="layer-stack" style="margin-bottom:0;">
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Application Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">System Software Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Operating System Layer</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Middleware</span></div>
+          <div class="layer-row"><span class="layer-name" style="font-size:11px;">Device Drivers</span></div>
+          <div class="layer-row" style="background:#18141F;"><span class="layer-name" style="font-size:11px;color:#A97AF5;">Hardware Layer</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Componentes Raspberry Pi OS -->
+  <div class="section">
+    <div class="section-label">04 — Principales componentes de Raspberry Pi OS</div>
+    <h2>Arquitectura interna de Raspbian</h2>
+
+    <div class="raspi-grid">
+      <div class="raspi-card">
+        <h3>Bootloader (Gestor de arranque)</h3>
+        <p>Inicializa el hardware a un estado conocido y carga el kernel. <strong>1ª etapa</strong>: programado en ROM (no modificable). <strong>2ª y 3ª etapa</strong>: almacenadas en la tarjeta SD, ejecutadas automáticamente.</p>
+      </div>
+      <div class="raspi-card">
+        <h3>Kernel de Linux</h3>
+        <p>Controladores de dispositivos, gestión de memoria, pila de red, sistema de archivos virtual, gestión de procesos, interfaz de llamadas al sistema. Al terminar de cargar ejecuta <strong>init</strong>.</p>
+      </div>
+      <div class="raspi-card">
+        <h3>Systemd (Demonios)</h3>
+        <p>Se ejecuta como demonio con <strong>PID 1</strong>. Organiza tareas como unidades: servicios (.service), puntos de montaje (.mount), dispositivos (.device), sockets (.socket), temporizadores (.timer).</p>
+      </div>
+      <div class="raspi-card">
+        <h3>Shell — Bash</h3>
+        <p>Interfaz de comandos. Permite supervisar y controlar el sistema. Capacidad de ejecutar <strong>scripts</strong> (colección de comandos en un fichero). Se inicia tras los demonios.</p>
+      </div>
+      <div class="raspi-card">
+        <h3>Utilidades de Shell (APT)</h3>
+        <p>Comandos disponibles tras Bash: copia de ficheros, creación de directorios, <strong>APT</strong> (Advanced Packaging Tool — instalar/eliminar software). Sin ellas el sistema fallaría.</p>
+      </div>
+      <div class="raspi-card">
+        <h3>Servidor gráfico X.Org</h3>
+        <p>Plataforma común para construir GUI. Maneja movimiento del ratón, teclas, dibuja aplicaciones en pantalla. Sobre él corre <strong>LXDE</strong> (Lightweight X11 Desktop Environment).</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Controladores de dispositivo -->
+  <div class="section">
+    <div class="section-label">05 — Controladores de dispositivo (Device Drivers)</div>
+    <h2>Funciones de los drivers</h2>
+    <p>Los controladores de dispositivo son bibliotecas de software que <strong>inicializan el hardware</strong> y <strong>gestionan el acceso</strong> a él por parte de las capas superiores. Todo driver se compone de alguna combinación de estas funciones:</p>
+
+    <div class="driver-grid">
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Startup</span>
+        <span class="driver-desc">Inicialización del hardware tras encendido o restablecimiento (PowerON/reset)</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Shutdown</span>
+        <span class="driver-desc">Configurar el hardware en su estado PowerOFF</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Disable</span>
+        <span class="driver-desc">Permitir que otro software desactive el hardware sobre la marcha</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Enable</span>
+        <span class="driver-desc">Permitir que otro software active el hardware sobre la marcha</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Acquire</span>
+        <span class="driver-desc">Permitir que otro software obtenga acceso singular (bloqueo) al hardware</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Release</span>
+        <span class="driver-desc">Permitir que otro software libere (desbloquee) el hardware</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Read</span>
+        <span class="driver-desc">Permitir que otro software lea datos del hardware</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Write</span>
+        <span class="driver-desc">Permitir que otro software escriba datos en el hardware</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Install</span>
+        <span class="driver-desc">Permitir que otro software instale nuevo hardware sobre la marcha</span>
+      </div>
+      <div class="driver-cell">
+        <span class="driver-name">Hardware Unmapping</span>
+        <span class="driver-desc">Permitir eliminar bloques de datos de dispositivos de almacenamiento de hardware</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Gestión de procesos -->
+  <div class="section">
+    <div class="section-label">06 — Gestión de procesos y tareas</div>
+    <h2>Creación de tareas: fork / exec / spawn</h2>
+
+    <div class="process-model">
+      <div class="pm-card">
+        <span class="pm-label">fork</span>
+        <p>Crea una <strong>copia del espacio de memoria de la tarea principal</strong> para la tarea secundaria. La tarea secundaria hereda propiedades: código del programa y variables de la tarea principal.</p>
+      </div>
+      <div class="pm-card">
+        <span class="pm-label">exec</span>
+        <p>Elimina explícitamente del espacio de memoria de la tarea secundaria <strong>cualquier referencia al programa principal</strong> y establece el nuevo código de programa de la tarea secundaria.</p>
+      </div>
+      <div class="pm-card">
+        <span class="pm-label">spawn model</span>
+        <p>Crea un <strong>espacio de direcciones completamente nuevo</strong> para la tarea secundaria. Permite definir el nuevo programa y los argumentos directamente. Sin duplicar espacio de memoria.</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>Ventajas de fork/exec</h3>
+        <p style="font-size:13px;">Eficiencia ganada por la tarea secundaria al <strong>heredar propiedades de la tarea principal</strong>. Flexibilidad para cambiar el entorno de la tarea secundaria posteriormente.</p>
+      </div>
+      <div class="grid-card">
+        <h3>Ventajas de spawn</h3>
+        <p style="font-size:13px;">No hay espacios de memoria duplicados para ser creados y destruidos. <strong>Más eficiente en memoria</strong>: sin la copia intermedia del fork/exec.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:0.75rem;">Planificador de tareas — factores de rendimiento</h3>
+    <p style="margin-bottom:1rem;">El planificador (scheduler) determina el orden y duración de las tareas que se ejecutarán en la CPU. En Raspberry Pi OS: FIFO simple, consciente de energía, un único planificador.</p>
+
+    <table class="sched-table">
+      <thead>
+        <tr>
+          <th>Factor</th>
+          <th>Definición exacta (examen)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Response Time</td>
+          <td>Tiempo para que el planificador cambie el contexto a una tarea lista. <strong>Incluye el tiempo de espera de la tarea en la cola lista.</strong></td>
+        </tr>
+        <tr>
+          <td>Turnaround Time</td>
+          <td>El tiempo que tarda un proceso en <strong>completarse</strong> (desde que se crea hasta que termina).</td>
+        </tr>
+        <tr>
+          <td>Overhead</td>
+          <td>El tiempo y los datos necesarios para <strong>determinar qué tareas se ejecutarán</strong> a continuación.</td>
+        </tr>
+        <tr>
+          <td>Fairness</td>
+          <td>¿Cuáles son los <strong>factores determinantes</strong> en cuanto a qué procesos llegan a ejecutarse?</td>
+        </tr>
+        <tr>
+          <td>Throughput</td>
+          <td>Procesar <strong>tantas tareas como sea posible</strong> en un período de tiempo determinado.</td>
+        </tr>
+        <tr>
+          <td>Starvation</td>
+          <td>Donde una tarea <strong>nunca llega a ejecutarse</strong>. No ocurre cuando se intenta lograr un rendimiento máximo de la tarea.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Process states -->
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.2rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.75rem;">Estados de una tarea en multitarea</h3>
+      <div style="display:flex;gap:0;background:var(--border-strong);border:1px solid var(--border-strong);">
+        <div style="flex:1;background:var(--surface);padding:0.9rem 1rem;text-align:center;border-right:1px solid var(--border-strong);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--accent4);margin-bottom:0.3rem;">LISTO</div>
+          <p style="font-size:12.5px;">Esperando en la cola lista para ser asignada a la CPU</p>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:0.9rem 1rem;text-align:center;border-right:1px solid var(--border-strong);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--accent);margin-bottom:0.3rem;">EN EJECUCIÓN</div>
+          <p style="font-size:12.5px;">Usando actualmente la CPU</p>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:0.9rem 1rem;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--accent3);margin-bottom:0.3rem;">BLOQUEADO</div>
+          <p style="font-size:12.5px;">Esperando un evento externo (E/S, señal, sincronización)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signals and IPC -->
+    <div class="two-col" style="margin-bottom:1.5rem;">
+      <div class="grid-card">
+        <h3>Señales e interrupciones</h3>
+        <p style="font-size:13px;">Las señales son indicadores de que un evento asíncrono ha sido generado (externo: otros procesos, hardware, temporizadores; o interno: errores de instrucción). Al recibir una señal, la tarea suspende su ejecución y cambia contexto al <strong>manejador de señales</strong>.</p>
+      </div>
+      <div class="grid-card">
+        <h3>Sincronización (IPC)</h3>
+        <p style="font-size:13px;">Mecanismos para que tareas se comuniquen y sincronicen: <strong>memoria compartida</strong> (riesgo de condición de carrera), <strong>paso de mensajes</strong>, y <strong>semáforos</strong>. Las secciones críticas se protegen con <strong>Mutex</strong> (exclusión mutua) para evitar condiciones de carrera.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 7: Gestión de memoria y E/S -->
+  <div class="section">
+    <div class="section-label">07 — Gestión de memoria y E/S</div>
+    <h2>Responsabilidades del SO en memoria y E/S</h2>
+
+    <div class="mem-grid">
+      <div class="mem-card">
+        <h3>Gestión de memoria — responsabilidades</h3>
+        <ul style="list-style:none;font-size:13px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Mapeo entre memoria lógica y referencias de tareas</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Determinar qué procesos cargar en memoria disponible</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Asignación y desasignación de memoria para procesos</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Seguimiento del uso de memoria de componentes</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Garantizar coherencia de caché</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Garantizar protección de memoria por proceso</li>
+        </ul>
+      </div>
+      <div class="mem-card">
+        <h3>Gestión de E/S</h3>
+        <ul style="list-style:none;font-size:13px;color:var(--ink2);">
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Capa de abstracción adicional sobre hardware y drivers</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Interfaz uniforme para dispositivos variados (solo a través de llamadas al sistema)</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Gestión de E/S síncrona y asíncrona</li>
+          <li style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Esquema eficiente de compartición entre múltiples procesos</li>
+          <li style="padding:3px 0;display:flex;gap:6px;"><span style="color:var(--accent);">›</span> Mecanismo de almacenamiento en caché del búfer</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 8: Middleware -->
+  <div class="section">
+    <div class="section-label">08 — Middleware</div>
+    <h2>Middleware en sistemas embebidos</h2>
+    <p>Software de sistema que no es el kernel, los drivers ni la aplicación. Actúa como <strong>capa de abstracción que media entre aplicación y sistema subyacente</strong>. También puede mediar entre múltiples aplicaciones en red.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.5rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);padding:0.8rem;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--accent);margin-bottom:0.3rem;">Adaptabilidad</div>
+        <p style="font-size:12px;">Adaptar a cambios en disponibilidad de recursos</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:0.8rem;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--accent);margin-bottom:0.3rem;">Conectividad</div>
+        <p style="font-size:12px;">Comunicación transparente con otras aplicaciones</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:0.8rem;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--accent);margin-bottom:0.3rem;">Flexibilidad</div>
+        <p style="font-size:12px;">Configurable según requisitos y limitaciones</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:0.8rem;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--accent);margin-bottom:0.3rem;">Portabilidad</div>
+        <p style="font-size:12px;">Ejecutarse en diferentes sistemas embebidos</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:0.8rem;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--accent);margin-bottom:0.3rem;">Seguridad</div>
+        <p style="font-size:12px;">Acceso autorizado a recursos del sistema</p>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <div class="key-box-label">tipos de middleware en sistemas embebidos</div>
+      <ul>
+        <li>Core middleware (base del sistema)</li>
+        <li>Middleware complejo específico del mercado</li>
+        <li>Mensajería y comunicación complejas</li>
+        <li>Mensajería distribuida orientada a mensajes (MOM)</li>
+        <li>Transacción distribuida</li>
+        <li>Middleware de controlador de red</li>
+        <li>ORB (Object Request Broker)</li>
+        <li>RPC (Remote Procedure Calls)</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 3 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>

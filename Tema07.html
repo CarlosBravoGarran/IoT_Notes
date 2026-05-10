@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT – Tema 7: Microservicios para IoT</title>
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6357/6357665.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #F5F0EC;
+    --surface: #FDFAF8;
+    --surface2: #EDE6DF;
+    --ink: #1F1610;
+    --ink2: #4A3C30;
+    --ink3: #9A8070;
+    --accent: #C45A0A;
+    --accent2: #0A5C8A;
+    --accent3: #2A7A3A;
+    --accent4: #7A2A8A;
+    --border: rgba(31,22,16,0.1);
+    --border-strong: rgba(31,22,16,0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    background: #1F1610;
+    color: #F5F0EC;
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: 'T7';
+    font-family: 'Syne', sans-serif;
+    font-size: 18rem;
+    font-weight: 800;
+    position: absolute;
+    right: -1rem;
+    top: -3rem;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .subject-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #F0A060;
+    background: rgba(240,160,96,0.12);
+    border: 1px solid rgba(240,160,96,0.3);
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+  h1 { font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; color: #F5F0EC; }
+  .subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: rgba(245,240,236,0.45); margin-top: 0.75rem; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 1.25rem; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 0.6rem; }
+  p { margin-bottom: 0.8rem; color: var(--ink2); }
+  p:last-child { margin-bottom: 0; }
+  .section { margin-bottom: 3.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border-strong); margin: 2.5rem 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; color: var(--ink2); }
+
+  /* Exam box */
+  .exam-box { background: #FEF5ED; border: 1.5px solid #E8A055; border-left: 4px solid var(--accent); padding: 1rem 1.5rem; margin-bottom: 2rem; }
+  .exam-box-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; }
+  .exam-box p { font-size: 14px; color: var(--ink2); margin-bottom: 0.4rem; }
+
+  /* Characteristics big grid */
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    margin-bottom: 2rem;
+  }
+  .char-card { background: var(--surface); padding: 1.3rem 1.4rem; position: relative; }
+  .char-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    margin-bottom: 0.9rem;
+    background: var(--accent);
+  }
+  .char-card:nth-child(2)::before { background: var(--accent2); }
+  .char-card:nth-child(3)::before { background: var(--accent3); }
+  .char-card:nth-child(4)::before { background: var(--accent4); }
+  .char-card:nth-child(5)::before { background: var(--accent); }
+  .char-card:nth-child(6)::before { background: var(--accent2); }
+  .char-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink3); margin-bottom: 0.3rem; }
+  .char-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink); margin-bottom: 0.5rem; }
+  .char-card p { font-size: 13px; }
+
+  /* Tipos de microservicios IoT */
+  .tipos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .tipo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    padding: 1.2rem 1.3rem;
+  }
+  .tipo-card:nth-child(2) { border-top-color: var(--accent2); }
+  .tipo-card:nth-child(3) { border-top-color: var(--accent3); }
+  .tipo-card:nth-child(4) { border-top-color: var(--accent4); }
+  .tipo-card:nth-child(5) { border-top-color: var(--accent); }
+  .tipo-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.3rem; }
+  .tipo-card h3 { font-size: 0.92rem; margin-bottom: 0.5rem; }
+  .tipo-card p { font-size: 13px; }
+
+  /* Architecture layers */
+  .arch-layers { display: flex; flex-direction: column; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .arch-layer { background: var(--surface); padding: 0.75rem 1.3rem; display: flex; align-items: center; gap: 1rem; }
+  .arch-layer:nth-child(even) { background: var(--surface2); }
+  .arch-layer-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; min-width: 200px; color: var(--accent); }
+  .arch-layer-desc { font-size: 13px; color: var(--ink2); }
+
+  /* Monolito vs Microservicios */
+  .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 2rem; }
+  .cmp-card { background: var(--surface); padding: 1.4rem 1.5rem; }
+  .cmp-card::before { content: attr(data-label); font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 0.5rem; }
+  .cmp-card.mono::before { color: var(--accent); }
+  .cmp-card.micro::before { color: var(--accent3); }
+  .cmp-card h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+  .cmp-card ul { list-style: none; font-size: 13px; color: var(--ink2); }
+  .cmp-card ul li { padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+  .cmp-card ul li:last-child { border-bottom: none; }
+  .cmp-card ul li::before { content: '›'; flex-shrink: 0; color: var(--ink3); }
+
+  /* Elementos table */
+  .elementos-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 2rem; }
+  .elementos-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .elementos-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .elementos-table tr:nth-child(even) td { background: var(--surface); }
+  .elementos-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent2); white-space: nowrap; }
+
+  /* Patrones de implementación */
+  .patron-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 2rem; }
+  .patron-card { background: var(--surface); border: 1px solid var(--border); padding: 1.1rem 1.3rem; }
+  .patron-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+  .patron-card h3 { font-size: 0.92rem; margin-bottom: 0.5rem; }
+  .patron-card p { font-size: 13px; }
+
+  /* Pros/Cons box */
+  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1rem; }
+  .proscons-col { background: var(--surface); padding: 0.9rem 1.1rem; }
+  .proscons-col.pros { border-top: 2px solid var(--accent3); }
+  .proscons-col.cons { border-top: 2px solid var(--accent); }
+  .proscons-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+  .proscons-col.pros .proscons-title { color: var(--accent3); }
+  .proscons-col.cons .proscons-title { color: var(--accent); }
+  .proscons-col ul { list-style: none; font-size: 12.5px; color: var(--ink2); }
+  .proscons-col ul li { padding: 2px 0; display: flex; gap: 6px; }
+  .proscons-col.pros ul li::before { content: '+'; color: var(--accent3); font-weight: 700; flex-shrink: 0; }
+  .proscons-col.cons ul li::before { content: '−'; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+
+  /* Ventajas grid */
+  .ventajas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 2rem; }
+  .ventaja-card { background: var(--surface); border: 1px solid var(--border); padding: 0.85rem 1rem; text-align: center; }
+  .ventaja-icon { font-size: 1.3rem; margin-bottom: 0.3rem; display: block; }
+  .ventaja-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem; color: var(--accent3); margin-bottom: 0.25rem; }
+  .ventaja-card p { font-size: 12px; }
+
+  /* Modelos de despliegue */
+  .deploy-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 2rem; }
+  .deploy-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ink); background: var(--surface2); }
+  .deploy-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  .deploy-table tr:nth-child(even) td { background: var(--surface); }
+  .deploy-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--ink); white-space: nowrap; font-size: 12px; }
+
+  /* Key box dark */
+  .key-box { background: var(--ink); color: var(--bg); padding: 1.5rem 2rem; margin-bottom: 2rem; }
+  .key-box-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #F0A060; margin-bottom: 0.75rem; }
+  .key-box ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 2rem; }
+  .key-box ul li { font-size: 14px; color: rgba(245,240,236,0.85); display: flex; gap: 8px; align-items: baseline; }
+  .key-box ul li::before { content: '—'; color: #F0A060; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  /* Two col simple */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-strong); border: 1px solid var(--border-strong); margin-bottom: 1.5rem; }
+  .grid-card { background: var(--surface); padding: 1.3rem 1.5rem; }
+  .grid-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .grid-card p { font-size: 13.5px; }
+
+  /* Modelos de negocio IoT — del PDF */
+  .business-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .business-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.1rem; }
+  .business-card h3 { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  .business-card p { font-size: 12.5px; }
+  .business-badge { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; border: 1px solid; margin-top: 5px; }
+  .bb-consumer { border-color: rgba(10,92,138,0.4); color: var(--accent2); }
+  .bb-provider { border-color: rgba(196,90,10,0.4); color: var(--accent); }
+  .bb-shared { border-color: rgba(42,122,58,0.4); color: var(--accent3); }
+
+  .page-footer { background: var(--surface2); border-top: 1px solid var(--border-strong); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink3); }
+
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--surface2); padding: 1px 5px; color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="subject-tag">Internet de las Cosas · UC3M</span>
+  <h1>Microservicios<br>para IoT</h1>
+  <p class="subtitle">Tema 7 &nbsp;·&nbsp; Conceptos, características, arquitectura, patrones de implementación y modelos de despliegue</p>
+</header>
+
+<div class="container">
+
+  <div class="exam-box">
+    <div class="exam-box-title">⚠ Lo que pregunta el profe (del PDF)</div>
+    <p>Relacionar términos de Docker-Compose (en el PDF está como ejercicio de T5 pero la imagen de modelos de despliegue On-premises / Managed / Hosted / IaaS / PaaS / SaaS sale en el Tema 7). Identificar <strong>quién gestiona cada capa</strong> en cada modelo (Consumer / Provider / Shared).</p>
+    <p>Características de los microservicios: <strong>Autónomo, Aislado, Elástico, Resiliente, Responsivo, Orientado a Mensaje, Programable, Configurable, Automatizado</strong>.</p>
+  </div>
+
+  <!-- SECTION 1: Definición -->
+  <div class="section">
+    <div class="section-label">01 — Qué es un microservicio</div>
+    <h2>Definición y principio fundamental</h2>
+
+    <div style="background:var(--surface);border:1px solid var(--border-strong);border-left:4px solid var(--accent);padding:1.2rem 1.5rem;margin-bottom:1.5rem;">
+      <p style="font-size:14.5px;color:var(--ink2);"><em>"Un microservicio proporciona una <strong>capacidad empresarial o de plataforma</strong> a través de una API, un contrato de datos y una configuración bien definidos. Proporciona esta función y <strong>solo esta función</strong>. Hace una cosa y la hace bien."</em></p>
+    </div>
+
+    <p>El prefijo "micro" no se refiere al tamaño del servicio, sino al <strong>alcance de su funcionalidad</strong>. Un microservicio puede ser grande internamente, pero su responsabilidad hacia el exterior está perfectamente delimitada. Esta es la base de toda la arquitectura.</p>
+
+    <div class="cmp-grid">
+      <div class="cmp-card mono" data-label="Arquitectura Monolítica — problema">
+        <h3>El problema con los monolitos</h3>
+        <ul>
+          <li>Todo el código compilado en un único binario grande</li>
+          <li>Un bug exige reconstruir, re-probar y re-desplegar todo</li>
+          <li>Con el tiempo, imposible de mantener y evolucionar</li>
+          <li>Escalar = escalar todo el sistema completo</li>
+          <li>Módulos fuertemente acoplados y dependientes</li>
+          <li>Un equipo toca código del otro constantemente</li>
+        </ul>
+      </div>
+      <div class="cmp-card micro" data-label="Arquitectura de Microservicios — solución">
+        <h3>La solución con microservicios</h3>
+        <ul>
+          <li>Cada servicio es un proceso independiente</li>
+          <li>Divididos verticalmente según capacidad de negocio</li>
+          <li>Comunicación por red (mensajes ligeros)</li>
+          <li>Desplegables de forma independiente</li>
+          <li>Cada equipo posee un servicio de principio a fin</li>
+          <li>Escalar solo lo que necesita escalado</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: Características -->
+  <div class="section">
+    <div class="section-label">02 — Características de los microservicios</div>
+    <h2>Las 9 características fundamentales</h2>
+
+    <div class="char-grid">
+      <div class="char-card">
+        <div class="char-num">01</div>
+        <div class="char-name">Autónomo</div>
+        <p>Capaz de existir independientemente. Responde, reacciona y se desarrolla de forma independiente del todo. Unidad autónoma de funcionalidad.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">02</div>
+        <div class="char-name">Aislado</div>
+        <p>Separado de los demás. Puede ejecutarse en diferentes lugares y en diferentes momentos. Dependencias poco acopladas con otros servicios.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">03</div>
+        <div class="char-name">Elástico</div>
+        <p>Capaz de volver a su forma original después de expandirse o comprimirse. Escala adecuadamente según el escenario de uso. Escala dinámica.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">04</div>
+        <div class="char-name">Resiliente</div>
+        <p>Capaz de mantenerse en funcionamiento después de un error. Tolerante a fallos. Proporciona un plazo razonable de recuperación si algo sale mal.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">05</div>
+        <div class="char-name">Responsivo</div>
+        <p>Rápido para responder o reaccionar. Brinda un desempeño razonable dado el escenario de ejecución. No bloquea a sus consumidores.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">06</div>
+        <div class="char-name">Orientado a Mensaje</div>
+        <p>Software que conecta sistemas separados llevando y distribuyendo mensajes entre ellos. API + contrato de datos bien definidos para la interacción.</p>
+      </div>
+      <div class="char-card" style="grid-column:span 1;">
+        <div class="char-num">07</div>
+        <div class="char-name">Programable</div>
+        <p>Un plan de tareas que se realizan para lograr un resultado específico. Invocable mediante API y mensajes de forma predecible y repetible.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">08</div>
+        <div class="char-name">Configurable</div>
+        <p>Diseñado para adaptarse a diferentes configuraciones o propósitos. Proporciona interfaz/consola administrativa. Reutilizable en distintos sistemas.</p>
+      </div>
+      <div class="char-card">
+        <div class="char-num">09</div>
+        <div class="char-name">Automatizado</div>
+        <p>Funciona sin control directo de una persona. Cultura <strong>DevOps</strong>: equipos multifuncionales (dev + ops) responsables del ciclo de vida completo.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Elementos internos -->
+  <div class="section">
+    <div class="section-label">03 — Elementos internos de un microservicio</div>
+    <h2>Capas de un microservicio</h2>
+    <p>Un microservicio bien construido sigue la misma separación de capas que las aplicaciones monolíticas, pero a escala reducida. La industria se ha decantado por <strong>REST sobre HTTP</strong> con <strong>JSON</strong> como formato estándar.</p>
+
+    <table class="elementos-table">
+      <thead>
+        <tr>
+          <th>Capa / Elemento</th>
+          <th>Función</th>
+          <th>Tecnología habitual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Capa de Protocolo</td>
+          <td>Define el protocolo de red y mecanismo de comunicación del microservicio. Define los endpoints visibles en red.</td>
+          <td>HTTP + REST, TCP, SOAP/WSDL</td>
+        </tr>
+        <tr>
+          <td>Modelos (Data Contract)</td>
+          <td>Definen la estructura de los datos que entran y salen. Se serializan/deserializan en la capa de protocolo y acceso a datos.</td>
+          <td>JSON (reemplazó a XML por más compacto)</td>
+        </tr>
+        <tr>
+          <td>Capa de Servicio</td>
+          <td>Donde ocurre el trabajo real: reglas de negocio, flujos de trabajo, cálculos. Implementa la funcionalidad del microservicio.</td>
+          <td>Lógica de dominio, clases de servicio</td>
+        </tr>
+        <tr>
+          <td>Capa de Acceso a Datos</td>
+          <td>Encapsula el acceso a almacenamiento: caché, relacional, documentos, blob, colas. Cada microservicio con su propio almacén.</td>
+          <td>ORM, drivers BD, Redis, S3</td>
+        </tr>
+        <tr>
+          <td>Capa SDK (opcional)</td>
+          <td>SDK específicos del lenguaje para facilitar la adopción de la API por parte de otros equipos y servicios.</td>
+          <td>Python SDK, Java SDK, npm package</td>
+        </tr>
+        <tr>
+          <td>API Gateway</td>
+          <td>Proxy entre clientes y microservicios. Proxy inverso, enrutamiento, terminación SSL, auth, rate limiting, logging centralizado.</td>
+          <td>Kong, AWS API Gateway, nginx</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.6rem;">Parámetros en URLs REST</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:13px;color:var(--ink2);">
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent2);display:block;margin-bottom:0.3rem;">Ruta de recursos</strong>
+          <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--surface2);padding:4px 8px;display:block;color:var(--accent3);">GET /profiles/users/id/99999</code>
+          <span style="font-size:12px;">→ devuelve el perfil del usuario 99999</span>
+        </div>
+        <div>
+          <strong style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent2);display:block;margin-bottom:0.3rem;">Parámetros de consulta</strong>
+          <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--surface2);padding:4px 8px;display:block;color:var(--accent3);">GET /profiles/users?location=MA</code>
+          <span style="font-size:12px;">→ devuelve array JSON de usuarios en MA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Tipos de microservicios IoT -->
+  <div class="section">
+    <div class="section-label">04 — Tipos de microservicios IoT</div>
+    <h2>Las 5 capacidades de una plataforma IoT</h2>
+    <p>Para implementar plenamente una solución IoT, se necesitan varias capacidades implementadas mediante microservicios especializados:</p>
+
+    <div class="tipos-grid">
+      <div class="tipo-card">
+        <div class="tipo-num">Tipo 01</div>
+        <h3>Gestión de dispositivos</h3>
+        <p>El dispositivo, tras inicializarse, establece relación con el entorno cloud mediante su <strong>identificador único</strong> (número de serie, UUID). La empresa recibe notificación de que el dispositivo está activo. Permite enviar comandos: actualizaciones de software, actualización de cachés de datos locales.</p>
+      </div>
+      <div class="tipo-card">
+        <div class="tipo-num">Tipo 02</div>
+        <h3>Ingestión de telemetría</h3>
+        <p>Los dispositivos pueden enviar <strong>varios mensajes por segundo</strong>. Con cientos o miles de dispositivos → decenas de miles o millones de mensajes al día. La plataforma cloud proporciona ingestión de gran volumen con un único punto final lógico.</p>
+      </div>
+      <div class="tipo-card">
+        <div class="tipo-num">Tipo 03</div>
+        <h3>Transformación y almacenamiento</h3>
+        <p>Una vez que llegan los mensajes, la nube selecciona, transforma y enruta los datos a varios medios de almacenamiento para archivarlos y prepararlos para procesamiento posterior (series de tiempo, SQL, NoSQL, blob).</p>
+      </div>
+      <div class="tipo-card">
+        <div class="tipo-num">Tipo 04</div>
+        <h3>Estado y notificaciones</h3>
+        <p>Visualización del estado del conjunto de mensajes en <strong>tiempo real</strong> a través de componentes de UI tabulares o gráficos. Notificaciones en tiempo real cuando mensajes contienen información de estado de alerta.</p>
+      </div>
+      <div class="tipo-card" style="grid-column:span 2;border-top-color:var(--accent2);">
+        <div class="tipo-num">Tipo 05</div>
+        <h3>Analítica y visualización de datos</h3>
+        <p>El valor de recopilar datos continuamente es construir un <strong>registro histórico</strong> para análisis y obtener información empresarial. Técnicas: almacén de datos tradicional, <strong>map-reduce</strong>, análisis predictivo. La escala en IoT se mide en petabytes, exabytes y zettabytes.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Patrones de implementación -->
+  <div class="section">
+    <div class="section-label">05 — Patrones de implementación</div>
+    <h2>Cómo implementar microservicios IoT</h2>
+
+    <div class="patron-grid">
+      <div class="patron-card">
+        <div class="patron-label">Patrón 1</div>
+        <h3>Base de datos por microservicio</h3>
+        <p>Cada microservicio tiene su propio almacén de datos para evitar acoplamiento fuerte en la capa de datos. Pueden compartir la misma BD física pero usar <strong>esquemas/colecciones/tablas separados</strong>.</p>
+        <div class="proscons" style="margin-top:0.75rem;">
+          <div class="proscons-col pros">
+            <div class="proscons-title">Ventajas</div>
+            <ul>
+              <li>Sin acoplamiento en capa de datos</li>
+              <li>Cada servicio elige su BD óptima</li>
+            </ul>
+          </div>
+          <div class="proscons-col cons">
+            <div class="proscons-title">Inconvenientes</div>
+            <ul>
+              <li>Transacciones distribuidas complejas</li>
+              <li>Consistencia eventual</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="patron-card">
+        <div class="patron-label">Patrón 2</div>
+        <h3>Event Sourcing (Abastecimiento de eventos)</h3>
+        <p>En lugar de guardar el estado actual de una entidad, se guarda <strong>cada evento de cambio de estado</strong> como serie inmutable. El estado actual se deduce reprocesando todos los eventos.</p>
+        <div class="proscons" style="margin-top:0.75rem;">
+          <div class="proscons-col pros">
+            <div class="proscons-title">Ventajas</div>
+            <ul>
+              <li>Atomicidad en sistemas escalables</li>
+              <li>Historial completo + viaje en el tiempo</li>
+              <li>Microservicios débilmente acoplados</li>
+            </ul>
+          </div>
+          <div class="proscons-col cons">
+            <div class="proscons-title">Inconvenientes</div>
+            <ul>
+              <li>Lectura compleja → necesita patrón CQRS</li>
+              <li>Mayor complejidad general</li>
+              <li>Gestionar eventos duplicados/perdidos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="patron-card">
+        <div class="patron-label">Patrón 3</div>
+        <h3>Backends para Frontends (BFF)</h3>
+        <p>Cada interfaz de usuario (web, móvil, Smart TV…) obtiene su propio backend personalizado. Actúa como fachada para los microservicios downstream, reduciendo llamadas "chatty" entre UI y servicios.</p>
+        <div class="proscons" style="margin-top:0.75rem;">
+          <div class="proscons-col pros">
+            <div class="proscons-title">Ventajas</div>
+            <ul>
+              <li>Optimizable por tipo de UI</li>
+              <li>Mayor seguridad</li>
+              <li>Menos llamadas UI↔microservicio</li>
+            </ul>
+          </div>
+          <div class="proscons-col cons">
+            <div class="proscons-title">Inconvenientes</div>
+            <ul>
+              <li>Duplicación de código entre BFFs</li>
+              <li>Proliferación si hay muchas UIs</li>
+              <li>No debe contener lógica de negocio</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="patron-card">
+        <div class="patron-label">Patrón 4 — API Gateway</div>
+        <h3>API Gateway</h3>
+        <p>Se sitúa entre clientes y microservicios. Proxy inverso que enruta solicitudes al microservicio correcto. También agrega respuestas de múltiples servicios. Gestiona preocupaciones transversales centralizadas.</p>
+        <div class="proscons" style="margin-top:0.75rem;">
+          <div class="proscons-col pros">
+            <div class="proscons-title">Ventajas</div>
+            <ul>
+              <li>SSL, auth, rate limiting centralizados</li>
+              <li>Reduce viajes de ida y vuelta cliente</li>
+              <li>Desacoplamiento front-back</li>
+            </ul>
+          </div>
+          <div class="proscons-col cons">
+            <div class="proscons-title">Inconvenientes</div>
+            <ul>
+              <li>Punto único de fallo potencial</li>
+              <li>Mayor latencia por salto extra</li>
+              <li>Cuello de botella si no escala</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:2rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.6rem;">Consumer-Driven Contract Testing</h3>
+      <p style="font-size:13.5px;">En arquitecturas con muchos microservicios desarrollados por equipos distintos, las pruebas de integración son un reto. La solución: el equipo consumidor escribe <strong>contratos explícitos</strong> (solicitud + respuesta esperada). El microservicio proveedor incluye esos contratos en su suite de pruebas automatizadas. Si el proveedor cambia su API incompatiblemente, los contratos lo detectan automáticamente.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Ventajas -->
+  <div class="section">
+    <div class="section-label">06 — Ventajas e inconvenientes</div>
+    <h2>Por qué usar microservicios</h2>
+
+    <div class="ventajas-grid">
+      <div class="ventaja-card">
+        <span class="ventaja-icon">⚡</span>
+        <div class="ventaja-name">Mayor velocidad</div>
+        <p>Desarrollo y despliegue más rápido por equipo independiente</p>
+      </div>
+      <div class="ventaja-card">
+        <span class="ventaja-icon">📐</span>
+        <div class="ventaja-name">Mejor escalado</div>
+        <p>Escalar solo el servicio que lo necesita (granular y horizontal)</p>
+      </div>
+      <div class="ventaja-card">
+        <span class="ventaja-icon">🔄</span>
+        <div class="ventaja-name">Modernización iterativa</div>
+        <p>Migrar módulo a módulo sin reescribir todo el sistema</p>
+      </div>
+      <div class="ventaja-card">
+        <span class="ventaja-icon">☁️</span>
+        <div class="ventaja-name">Ecosistema moderno</div>
+        <p>Aprovecha cloud, contenedores, DevOps y serverless</p>
+      </div>
+      <div class="ventaja-card">
+        <span class="ventaja-icon">🧠</span>
+        <div class="ventaja-name">Menos carga cognitiva</div>
+        <p>Cada dev solo debe entender su pequeño servicio</p>
+      </div>
+      <div class="ventaja-card">
+        <span class="ventaja-icon">🛡️</span>
+        <div class="ventaja-name">Fallos aislados</div>
+        <p>Un servicio caído no tumba toda la aplicación</p>
+      </div>
+    </div>
+
+    <div class="key-box">
+      <div class="key-box-label">problemas a considerar al implementar microservicios</div>
+      <ul>
+        <li>Mayor número de partes móviles (servicios, BDs, procesos, contenedores)</li>
+        <li>La complejidad pasa del código a la infraestructura</li>
+        <li>Proliferación de mensajes y tráfico de red entre servicios</li>
+        <li>Gestionar la seguridad del sistema completo es un desafío</li>
+        <li>Diseñar el sistema completo es más difícil que un monolito</li>
+        <li>Introduce las complejidades de los sistemas distribuidos</li>
+        <li>Requiere cultura DevOps madura antes de emprender la migración</li>
+        <li>Pruebas de extremo a extremo más frágiles y costosas</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 7: Modelos de despliegue de negocio en IoT -->
+  <div class="section">
+    <div class="section-label">07 — Modelos de despliegue de negocio en IoT</div>
+    <h2>On-premises · Managed · Hosted · IaaS · PaaS · SaaS</h2>
+    <p>En IoT hay que decidir qué capas gestiona el cliente (Consumer) y cuáles gestiona el proveedor (Provider). Las capas son siempre las mismas: Aplicaciones+Datos, Runtime, Middleware, SO, Virtualización, Servidor+Red, Refrigeración.</p>
+
+    <table class="deploy-table">
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Quién gestiona qué</th>
+          <th>Descripción</th>
+          <th>Ejemplo IoT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>On-premises</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Consumer gestiona TODO</span></td>
+          <td>Toda la infraestructura física y lógica está en las instalaciones del cliente. Máximo control, máxima responsabilidad.</td>
+          <td>Fábrica con servidores propios para IIoT</td>
+        </tr>
+        <tr>
+          <td>Managed</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Consumer: Apps+Datos+Runtime+MW+SO<br>Provider: Virtualización+Servidor+Red</span></td>
+          <td>El proveedor gestiona el hardware físico. El cliente gestiona todo el software.</td>
+          <td>Servidor dedicado alquilado</td>
+        </tr>
+        <tr>
+          <td>Hosted</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Provider: Virtualización+Servidor+Red+SO<br>Consumer: Apps+Datos+Runtime+MW</span></td>
+          <td>Proveedor gestiona además el SO base. El cliente gestiona middleware y aplicaciones.</td>
+          <td>VPS en OVH, Hetzner</td>
+        </tr>
+        <tr>
+          <td>IaaS</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Consumer: Apps+Datos+Runtime+MW+SO<br>Provider: Virtualización+Servidor+Red</span></td>
+          <td>Infraestructura como Servicio. El cliente gestiona desde el SO hacia arriba. Proveedor gestiona el hardware virtualizado.</td>
+          <td>AWS EC2, Azure VM, Google Compute Engine</td>
+        </tr>
+        <tr>
+          <td>PaaS</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Consumer: Apps+Datos<br>Provider: Todo lo demás (Runtime, MW, SO, Virt., Servidor)</span></td>
+          <td>Plataforma como Servicio. El cliente solo gestiona su aplicación y sus datos. El proveedor gestiona toda la plataforma.</td>
+          <td>AWS IoT Core, Azure IoT Hub, Google Cloud IoT</td>
+        </tr>
+        <tr>
+          <td>SaaS</td>
+          <td><span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:11px;">Consumer: solo usa la App<br>Provider: gestiona TODO</span></td>
+          <td>Software como Servicio. El cliente solo usa la aplicación. El proveedor gestiona absolutamente todo.</td>
+          <td>ThingSpeak, Ubidots, Grafana Cloud</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem 1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:0.9rem;margin-bottom:0.75rem;">Regla mnemotécnica de quién gestiona qué</h3>
+      <div style="display:flex;gap:0;background:var(--border-strong);border:1px solid var(--border-strong);">
+        <div style="flex:1;background:var(--surface);padding:0.75rem;text-align:center;border-right:1px solid var(--border-strong);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:4px;">On-prem</div>
+          <div style="font-size:12px;color:var(--accent2);">Consumer todo</div>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:0.75rem;text-align:center;border-right:1px solid var(--border-strong);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:4px;">IaaS</div>
+          <div style="font-size:12px;color:var(--accent2);">Consumer desde SO</div>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:0.75rem;text-align:center;border-right:1px solid var(--border-strong);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:4px;">PaaS</div>
+          <div style="font-size:12px;color:var(--accent2);">Consumer solo Apps+Datos</div>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:0.75rem;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:4px;">SaaS</div>
+          <div style="font-size:12px;color:var(--accent2);">Provider todo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 8: Separación de intereses y DevOps -->
+  <div class="section">
+    <div class="section-label">08 — Principios de diseño</div>
+    <h2>Separación de Intereses (SoC) y DevOps</h2>
+
+    <div class="two-col">
+      <div class="grid-card">
+        <h3>Separación de Intereses (SoC)</h3>
+        <p style="font-size:13.5px;">Principio de diseño que separa la implementación en capas distintas, cada una abordando una preocupación separada. Se logra mediante <strong>encapsulación de información e interfaces bien definidas</strong>.</p>
+        <p style="font-size:13.5px;margin-top:0.5rem;">En microservicios: las capas de negocio y datos se cortan <strong>verticalmente</strong> a lo largo de costuras funcionales. Cada servicio tiene su propio modelo de dominio y API.</p>
+        <p style="font-size:13.5px;margin-top:0.5rem;">Arquitectura típica: <strong>3 capas</strong> — Presentación (UX) · Aplicación (negocio) · Datos (persistencia).</p>
+      </div>
+      <div class="grid-card">
+        <h3>Cultura DevOps</h3>
+        <p style="font-size:13.5px;">Promueve la <strong>colaboración e integración</strong> de equipos de desarrollo y operaciones. El equipo que diseña un microservicio también lo despliega y mantiene.</p>
+        <p style="font-size:13.5px;margin-top:0.5rem;">Equipos <strong>multifuncionales</strong>: arquitectos + desarrolladores + testers + ingenieros de operaciones. Todos responsables del ciclo de vida completo del producto.</p>
+        <p style="font-size:13.5px;margin-top:0.5rem;">Sin una canalización de CI/CD completamente automatizada, la proliferación de microservicios se vuelve inmanejable. DevOps no es opcional — es un prerrequisito.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <span>IoT · Tema 7 · Universidad Carlos III de Madrid</span>
+  <span>Apuntes generados para examen final</span>
+</footer>
+
+</body>
+</html>
