@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apuntes IoT — Sensores y Actuadores</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f0f13;
+    --surface: #17171e;
+    --surface2: #1e1e28;
+    --border: #2a2a38;
+    --accent: #7c6cfc;
+    --accent2: #fc6c8f;
+    --accent3: #6cfcb8;
+    --accent4: #fcc96c;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --raspi: #c93a6e;
+    --pila: #e8a020;
+    --gnd: #444466;
+    --signal: #6caafc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    padding: 3rem 2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #0f0f13 60%, #17101f);
+  }
+
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.95rem; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .legend-item {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.8rem; color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 28px; height: 4px; border-radius: 2px;
+  }
+
+  .toc {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: all 0.2s;
+  }
+  .toc a:hover { border-color: var(--accent); color: var(--accent); }
+
+  .needs-pila { border-color: var(--pila) !important; color: var(--pila) !important; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+  .section {
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.4rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-raspi { background: #2a0d1a; color: var(--raspi); border: 1px solid var(--raspi); }
+  .badge-pila  { background: #2a1d00; color: var(--pila);  border: 1px solid var(--pila); }
+  .badge-i2c   { background: #0d1a2a; color: var(--signal);  border: 1px solid var(--signal); }
+  .badge-spi   { background: #0d2a1a; color: var(--accent3); border: 1px solid var(--accent3); }
+  .badge-uart  { background: #2a1a0d; color: var(--accent4); border: 1px solid var(--accent4); }
+  .badge-gpio  { background: #1a0d2a; color: var(--accent);  border: 1px solid var(--accent); }
+  .badge-pwm   { background: #2a0d20; color: var(--accent2); border: 1px solid var(--accent2); }
+
+  .section-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  @media (max-width: 640px) { .section-body { grid-template-columns: 1fr; } }
+
+  .diagram-col {
+    padding: 1.2rem;
+    border-right: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .info-col { padding: 1.2rem; }
+
+  .pin-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.6rem; }
+  .pin-table th {
+    text-align: left; padding: 0.3rem 0.5rem;
+    color: var(--muted); font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+  }
+  .pin-table td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid #1e1e28;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .pin-raspi { color: var(--raspi); }
+  .pin-pila  { color: var(--pila); }
+  .pin-gnd   { color: #8888aa; }
+  .pin-signal { color: var(--signal); }
+  .pin-signal2 { color: var(--accent3); }
+  .pin-pwm   { color: var(--accent2); }
+
+  .nota {
+    margin-top: 0.8rem;
+    padding: 0.6rem 0.8rem;
+    background: #0f0f18;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .nota strong { color: var(--text); }
+
+  svg text { font-family: 'JetBrains Mono', monospace; }
+
+  .section-full .section-body { grid-template-columns: 1fr; }
+  .section-full .diagram-col { border-right: none; border-bottom: 1px solid var(--border); }
+
+  h3 { font-size: 0.88rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sensores y Actuadores</h1>
+  <p>Apuntes IoT — Raspberry Pi · Esquemas de conexión completos</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--raspi)"></div> VCC Raspi (3.3V / 5V)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pila)"></div> VCC Pila (externa)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#555577"></div> GND</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--signal)"></div> Señal GPIO</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> PWM</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> SPI / I2C / UART</div>
+</div>
+
+<div class="toc">
+  <a href="#led">1. LED</a>
+  <a href="#led-rgb">2. LED RGB</a>
+  <a href="#ultrasonidos">3. Ultrasonidos</a>
+  <a href="#pulsador">4. Pulsador</a>
+  <a href="#acelerometro">5. Acelerómetro</a>
+  <a href="#ldr">6. Sensor LDR</a>
+  <a href="#co2">7. Sensor CO₂</a>
+  <a href="#camara">8. Cámara IR</a>
+  <a href="#tyh">9. Sensor T&H</a>
+  <a href="#nfc">10. NFC</a>
+  <a href="#display">11. Display</a>
+  <a href="#servo">12. Servomotor</a>
+  <a href="#motor">13. Motor DC</a>
+</div>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════ 1. LED -->
+<div class="section" id="led">
+  <div class="section-header">
+    <h2>1. LED simple</h2>
+    <span class="badge badge-gpio">GPIO</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="200" height="160" viewBox="0 0 200 160">
+        <!-- Raspi pin -->
+        <rect x="10" y="60" width="50" height="24" rx="4" fill="#2a0d1a" stroke="#c93a6e" stroke-width="1"/>
+        <text x="35" y="76" text-anchor="middle" fill="#c93a6e" font-size="9">GPIO</text>
+        <!-- cable señal -->
+        <line x1="60" y1="72" x2="85" y2="72" stroke="#6caafc" stroke-width="2"/>
+        <!-- resistencia -->
+        <rect x="85" y="64" width="28" height="16" rx="3" fill="#17171e" stroke="#6caafc" stroke-width="1.5"/>
+        <text x="99" y="75" text-anchor="middle" fill="#6caafc" font-size="8">330Ω</text>
+        <!-- cable a LED -->
+        <line x1="113" y1="72" x2="130" y2="72" stroke="#6caafc" stroke-width="2"/>
+        <!-- LED ánodo -->
+        <polygon points="130,62 130,82 148,72" fill="#fcc96c" stroke="#fcc96c" stroke-width="1"/>
+        <line x1="148" y1="62" x2="148" y2="82" stroke="#fcc96c" stroke-width="2"/>
+        <!-- cable GND -->
+        <line x1="148" y1="72" x2="170" y2="72" stroke="#555577" stroke-width="2"/>
+        <rect x="170" y="60" width="22" height="24" rx="4" fill="#1a1a2a" stroke="#555577" stroke-width="1"/>
+        <text x="181" y="76" text-anchor="middle" fill="#8888aa" font-size="9">GND</text>
+        <!-- labels -->
+        <text x="99" y="55" text-anchor="middle" fill="#555577" font-size="8">R</text>
+        <text x="139" y="100" text-anchor="middle" fill="#fcc96c" font-size="8">LED</text>
+        <text x="35" y="100" text-anchor="middle" fill="#6caafc" font-size="8">ánodo +</text>
+        <text x="181" y="100" text-anchor="middle" fill="#8888aa" font-size="8">cátodo −</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin LED</th><th>Destino</th></tr>
+        <tr><td>Ánodo (+)</td><td class="pin-signal">GPIO + resistencia 330Ω</td></tr>
+        <tr><td>Cátodo (−)</td><td class="pin-gnd">GND Raspi</td></tr>
+      </table>
+      <div class="nota">
+        <strong>PWM:</strong> Para variar brillo usa GPIO 12, 13, 18 o 19 — tienen PWM hardware. El resto solo on/off (0/1).
+      </div>
+      <div class="nota">
+        <strong>Resistencia:</strong> R = (Vcc − Vled) / Iled. Con 3.3V y LED rojo (2V, 20mA) → R = 65Ω → usar <strong>100Ω</strong>. Con 5V → <strong>150–220Ω</strong>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 2. LED RGB -->
+<div class="section" id="led-rgb">
+  <div class="section-header">
+    <h2>2. LED RGB</h2>
+    <div style="display:flex;gap:0.5rem">
+      <span class="badge badge-gpio">GPIO</span>
+      <span class="badge badge-pwm">PWM</span>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="180" viewBox="0 0 220 180">
+        <!-- LED RGB cuerpo -->
+        <ellipse cx="110" cy="90" rx="22" ry="28" fill="#1e1e28" stroke="#444466" stroke-width="1.5"/>
+        <text x="110" y="86" text-anchor="middle" fill="#fc6c8f" font-size="7">R</text>
+        <text x="110" y="96" text-anchor="middle" fill="#6cfcb8" font-size="7">G</text>
+        <text x="110" y="106" text-anchor="middle" fill="#6caafc" font-size="7">B</text>
+        <!-- 4 pines -->
+        <line x1="110" y1="118" x2="80" y2="145" stroke="#fc6c8f" stroke-width="1.5"/>
+        <line x1="110" y1="118" x2="97" y2="150" stroke="#c93a6e" stroke-width="2"/>
+        <line x1="110" y1="118" x2="114" y2="150" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="110" y1="118" x2="130" y2="145" stroke="#6caafc" stroke-width="1.5"/>
+        <!-- labels pines -->
+        <text x="65" y="158" text-anchor="middle" fill="#fc6c8f" font-size="8">R</text>
+        <text x="97" y="163" text-anchor="middle" fill="#c93a6e" font-size="8">COM</text>
+        <text x="118" y="163" text-anchor="middle" fill="#6cfcb8" font-size="8">G</text>
+        <text x="140" y="158" text-anchor="middle" fill="#6caafc" font-size="8">B</text>
+        <!-- resistencias -->
+        <rect x="30" y="40" width="22" height="12" rx="2" fill="#17171e" stroke="#fc6c8f" stroke-width="1"/>
+        <text x="41" y="49" text-anchor="middle" fill="#fc6c8f" font-size="7">R</text>
+        <rect x="56" y="28" width="22" height="12" rx="2" fill="#17171e" stroke="#6cfcb8" stroke-width="1"/>
+        <text x="67" y="37" text-anchor="middle" fill="#6cfcb8" font-size="7">R</text>
+        <rect x="130" y="28" width="22" height="12" rx="2" fill="#17171e" stroke="#6caafc" stroke-width="1"/>
+        <text x="141" y="37" text-anchor="middle" fill="#6caafc" font-size="7">R</text>
+        <!-- GPIO labels -->
+        <text x="14" y="40" text-anchor="middle" fill="#fc6c8f" font-size="8">GPIO R</text>
+        <text x="44" y="22" text-anchor="middle" fill="#6cfcb8" font-size="8">GPIO G</text>
+        <text x="166" y="22" text-anchor="middle" fill="#6caafc" font-size="8">GPIO B</text>
+        <!-- COM label -->
+        <text x="97" y="18" text-anchor="middle" fill="#c93a6e" font-size="8">cátodo común → GND</text>
+        <text x="97" y="28" text-anchor="middle" fill="#8888aa" font-size="7">(ánodo común → 3.3V)</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Cátodo común (más habitual)</h3>
+      <table class="pin-table">
+        <tr><th>Pin</th><th>Destino</th></tr>
+        <tr><td>R</td><td class="pin-signal">GPIO + 330Ω</td></tr>
+        <tr><td>COM (−)</td><td class="pin-gnd">GND</td></tr>
+        <tr><td>G</td><td class="pin-signal">GPIO + 330Ω</td></tr>
+        <tr><td>B</td><td class="pin-signal">GPIO + 330Ω</td></tr>
+      </table>
+      <div class="nota"><strong>Ánodo común:</strong> el pin COM va a 3.3V y los colores van a GPIO (lógica invertida: LOW = encendido).</div>
+      <div class="nota"><strong>No hay forma de saber si es ánodo o cátodo común</strong> sin el datasheet — probar con multímetro o por ensayo/error.</div>
+      <div class="nota"><strong>Con PWM</strong> en los 3 pines → colores intermedios mezclando R, G, B.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 3. ULTRASONIDOS -->
+<div class="section" id="ultrasonidos">
+  <div class="section-header">
+    <h2>3. Sensor Ultrasonidos (HC-SR04)</h2>
+    <span class="badge badge-gpio">GPIO</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="160" viewBox="0 0 220 160">
+        <!-- sensor -->
+        <rect x="60" y="40" width="100" height="60" rx="6" fill="#1e1e28" stroke="#444466" stroke-width="1.5"/>
+        <circle cx="85" cy="70" r="14" fill="#2a2a38" stroke="#6caafc" stroke-width="1"/>
+        <circle cx="135" cy="70" r="14" fill="#2a2a38" stroke="#6caafc" stroke-width="1"/>
+        <text x="110" y="52" text-anchor="middle" fill="#8888aa" font-size="8">HC-SR04</text>
+        <!-- pines -->
+        <line x1="72" y1="100" x2="72" y2="120" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="90" y1="100" x2="90" y2="120" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="108" y1="100" x2="108" y2="120" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="126" y1="100" x2="126" y2="120" stroke="#555577" stroke-width="1.5"/>
+        <text x="72" y="132" text-anchor="middle" fill="#c93a6e" font-size="8">Vcc</text>
+        <text x="90" y="132" text-anchor="middle" fill="#6caafc" font-size="8">Trig</text>
+        <text x="108" y="132" text-anchor="middle" fill="#6cfcb8" font-size="8">Echo</text>
+        <text x="126" y="132" text-anchor="middle" fill="#8888aa" font-size="8">GND</text>
+        <text x="72" y="143" text-anchor="middle" fill="#c93a6e" font-size="7">5V</text>
+        <text x="90" y="143" text-anchor="middle" fill="#6caafc" font-size="7">GPIO24</text>
+        <text x="108" y="143" text-anchor="middle" fill="#6cfcb8" font-size="7">÷2</text>
+        <text x="126" y="143" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+        <!-- divisor voltaje -->
+        <text x="155" y="55" text-anchor="start" fill="#6cfcb8" font-size="8">Echo → 5V</text>
+        <text x="155" y="68" text-anchor="start" fill="#6cfcb8" font-size="8">usar divisor</text>
+        <text x="155" y="80" text-anchor="start" fill="#6cfcb8" font-size="8">R1=1kΩ</text>
+        <text x="155" y="92" text-anchor="start" fill="#6cfcb8" font-size="8">R2=2kΩ</text>
+        <text x="155" y="104" text-anchor="start" fill="#8888aa" font-size="7">→ GPIO 3.3V</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin</th><th>Destino</th></tr>
+        <tr><td>Vcc</td><td class="pin-raspi">5V Raspi</td></tr>
+        <tr><td>Trig</td><td class="pin-signal">GPIO24 (salida)</td></tr>
+        <tr><td>Echo</td><td class="pin-signal">GPIO25 — con divisor de tensión</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND Raspi</td></tr>
+      </table>
+      <div class="nota">
+        <strong>¡Ojo!</strong> Echo devuelve 5V pero el GPIO aguanta 3.3V máx. Divisor resistivo: R1=1kΩ (Echo→Vout), R2=2kΩ (Vout→GND). Vout = 5V × 2/(1+2) = 3.33V ✓
+      </div>
+      <div class="nota">
+        <strong>Funcionamiento:</strong> envías pulso de 10µs por Trig → mides duración del Echo → distancia = tiempo × 343 / 2 (m/s del sonido).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 4. PULSADOR -->
+<div class="section" id="pulsador">
+  <div class="section-header">
+    <h2>4. Pulsador</h2>
+    <span class="badge badge-gpio">GPIO</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <!-- Pull-up -->
+        <text x="10" y="20" fill="#6cfcb8" font-size="9" font-weight="bold">PULL-UP</text>
+        <rect x="10" y="30" width="22" height="12" rx="2" fill="#17171e" stroke="#c93a6e" stroke-width="1"/>
+        <text x="21" y="39" text-anchor="middle" fill="#c93a6e" font-size="7">10kΩ</text>
+        <line x1="21" y1="25" x2="21" y2="30" stroke="#c93a6e" stroke-width="1.5"/>
+        <text x="21" y="24" text-anchor="middle" fill="#c93a6e" font-size="7">3.3V</text>
+        <line x1="21" y1="42" x2="21" y2="55" stroke="#6caafc" stroke-width="1.5"/>
+        <!-- botón -->
+        <rect x="10" y="55" width="22" height="18" rx="3" fill="#2a2a38" stroke="#fcc96c" stroke-width="1.5"/>
+        <text x="21" y="67" text-anchor="middle" fill="#fcc96c" font-size="8">BTN</text>
+        <line x1="21" y1="73" x2="21" y2="85" stroke="#555577" stroke-width="1.5"/>
+        <text x="21" y="94" text-anchor="middle" fill="#8888aa" font-size="8">GND</text>
+        <text x="21" y="104" text-anchor="middle" fill="#6caafc" font-size="7">→ GPIO</text>
+        <text x="21" y="114" text-anchor="middle" fill="#8888aa" font-size="7">en reposo=HIGH</text>
+        <text x="21" y="124" text-anchor="middle" fill="#fcc96c" font-size="7">pulsado=LOW</text>
+
+        <!-- Pull-down -->
+        <text x="120" y="20" fill="#fc6c8f" font-size="9" font-weight="bold">PULL-DOWN</text>
+        <line x1="155" y1="25" x2="155" y2="38" stroke="#6caafc" stroke-width="1.5"/>
+        <rect x="144" y="38" width="22" height="18" rx="3" fill="#2a2a38" stroke="#fcc96c" stroke-width="1.5"/>
+        <text x="155" y="50" text-anchor="middle" fill="#fcc96c" font-size="8">BTN</text>
+        <line x1="144" y1="47" x2="120" y2="47" stroke="#c93a6e" stroke-width="1.5"/>
+        <text x="110" y="51" text-anchor="middle" fill="#c93a6e" font-size="7">3.3V</text>
+        <line x1="155" y1="56" x2="155" y2="68" stroke="#6caafc" stroke-width="1.5"/>
+        <rect x="144" y="68" width="22" height="12" rx="2" fill="#17171e" stroke="#8888aa" stroke-width="1"/>
+        <text x="155" y="77" text-anchor="middle" fill="#8888aa" font-size="7">10kΩ</text>
+        <line x1="155" y1="80" x2="155" y2="92" stroke="#555577" stroke-width="1.5"/>
+        <text x="155" y="100" text-anchor="middle" fill="#8888aa" font-size="8">GND</text>
+        <text x="155" y="114" text-anchor="middle" fill="#8888aa" font-size="7">reposo=LOW</text>
+        <text x="155" y="124" text-anchor="middle" fill="#fcc96c" font-size="7">pulsado=HIGH</text>
+        <text x="155" y="27" text-anchor="middle" fill="#6caafc" font-size="7">→ GPIO</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Pull-up (más común)</h3>
+      <table class="pin-table">
+        <tr><th>Pin</th><th>Destino</th></tr>
+        <tr><td>Un lado</td><td class="pin-signal">GPIO + R 10kΩ → 3.3V</td></tr>
+        <tr><td>Otro lado</td><td class="pin-gnd">GND</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Pull-up interno:</strong> La Raspi tiene resistencias pull-up internas activables por software (<code>GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)</code>). No hace falta resistencia externa.
+      </div>
+      <div class="nota">
+        <strong>Flancos:</strong> con <code>GPIO.add_event_detect(pin, GPIO.FALLING)</code> se detecta el momento del pulso sin polling.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 5. ACELERÓMETRO -->
+<div class="section" id="acelerometro">
+  <div class="section-header">
+    <h2>5. Acelerómetro (MPU-6050)</h2>
+    <span class="badge badge-i2c">I2C</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <!-- chip -->
+        <rect x="70" y="30" width="80" height="90" rx="6" fill="#1e1e28" stroke="#6caafc" stroke-width="1.5"/>
+        <text x="110" y="52" text-anchor="middle" fill="#6caafc" font-size="9">MPU-6050</text>
+        <text x="110" y="65" text-anchor="middle" fill="#555577" font-size="8">I2C 0x68/0x69</text>
+        <!-- pines izq -->
+        <line x1="50" y1="75" x2="70" y2="75" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="50" y1="90" x2="70" y2="90" stroke="#555577" stroke-width="1.5"/>
+        <line x1="50" y1="105" x2="70" y2="105" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="50" y1="115" x2="70" y2="115" stroke="#6caafc" stroke-width="1.5"/>
+        <text x="45" y="78" text-anchor="end" fill="#c93a6e" font-size="8">VCC→3.3V</text>
+        <text x="45" y="93" text-anchor="end" fill="#8888aa" font-size="8">GND</text>
+        <text x="45" y="108" text-anchor="end" fill="#6cfcb8" font-size="8">SCL→GPIO3</text>
+        <text x="45" y="118" text-anchor="end" fill="#6caafc" font-size="8">SDA→GPIO2</text>
+        <!-- INT pin -->
+        <line x1="150" y1="85" x2="170" y2="85" stroke="#fcc96c" stroke-width="1.5"/>
+        <text x="175" y="88" text-anchor="start" fill="#fcc96c" font-size="8">INT→GPIO</text>
+        <text x="175" y="98" text-anchor="start" fill="#555577" font-size="7">(flancos)</text>
+        <!-- Display nota -->
+        <text x="110" y="130" text-anchor="middle" fill="#fcc96c" font-size="8">→ Display comparte I2C</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin MPU</th><th>Destino</th></tr>
+        <tr><td>VCC</td><td class="pin-raspi">3.3V Raspi</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND</td></tr>
+        <tr><td>SCL</td><td class="pin-signal2">GPIO3 (SCL)</td></tr>
+        <tr><td>SDA</td><td class="pin-signal">GPIO2 (SDA)</td></tr>
+        <tr><td>INT</td><td class="pin-pwm">GPIO cualquiera (flancos)</td></tr>
+        <tr><td>AD0</td><td class="pin-gnd">GND → dir. 0x68 / VCC → 0x69</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Display:</strong> si el display también es I2C, se conectan SCL y SDA al mismo bus — cada dispositivo tiene dirección distinta. No hace falta bus separado.
+      </div>
+      <div class="nota">
+        <strong>Flancos:</strong> el pin INT genera una interrupción cuando hay nueva medida. Conectarlo a un GPIO y usar <code>GPIO.RISING</code> para no hacer polling.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 6. LDR -->
+<div class="section" id="ldr">
+  <div class="section-header">
+    <h2>6. Sensor Luminosidad (LDR + condensador)</h2>
+    <span class="badge badge-gpio">GPIO</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="140" viewBox="0 0 220 140">
+        <!-- circuito RC -->
+        <text x="10" y="20" fill="#c93a6e" font-size="8">3.3V</text>
+        <line x1="20" y1="22" x2="20" y2="35" stroke="#c93a6e" stroke-width="1.5"/>
+        <!-- LDR -->
+        <rect x="8" y="35" width="24" height="16" rx="3" fill="#17171e" stroke="#fcc96c" stroke-width="1.5"/>
+        <text x="20" y="46" text-anchor="middle" fill="#fcc96c" font-size="8">LDR</text>
+        <line x1="20" y1="51" x2="20" y2="65" stroke="#6caafc" stroke-width="1.5"/>
+        <!-- nodo -->
+        <circle cx="20" cy="65" r="3" fill="#6caafc"/>
+        <!-- condensador -->
+        <line x1="20" y1="65" x2="50" y2="65" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="50" y1="55" x2="50" y2="75" stroke="#6cfcb8" stroke-width="2"/>
+        <line x1="54" y1="55" x2="54" y2="75" stroke="#6cfcb8" stroke-width="2"/>
+        <line x1="54" y1="65" x2="70" y2="65" stroke="#555577" stroke-width="1.5"/>
+        <line x1="70" y1="65" x2="70" y2="90" stroke="#555577" stroke-width="1.5"/>
+        <text x="52" y="88" text-anchor="middle" fill="#8888aa" font-size="8">GND</text>
+        <!-- GPIO -->
+        <line x1="20" y1="65" x2="20" y2="90" stroke="#6caafc" stroke-width="1.5"/>
+        <rect x="5" y="90" width="30" height="16" rx="3" fill="#1a1a2a" stroke="#6caafc" stroke-width="1"/>
+        <text x="20" y="101" text-anchor="middle" fill="#6caafc" font-size="8">GPIO</text>
+        <!-- labels -->
+        <text x="52" y="50" text-anchor="middle" fill="#6cfcb8" font-size="8">C</text>
+        <text x="90" y="40" text-anchor="start" fill="#8888aa" font-size="8">Más luz →</text>
+        <text x="90" y="52" text-anchor="start" fill="#8888aa" font-size="8">LDR baja R →</text>
+        <text x="90" y="64" text-anchor="start" fill="#8888aa" font-size="8">C carga antes →</text>
+        <text x="90" y="76" text-anchor="start" fill="#fcc96c" font-size="8">tiempo↓ = luz↑</text>
+        <text x="90" y="100" text-anchor="start" fill="#6caafc" font-size="8">Medir tiempo de</text>
+        <text x="90" y="112" text-anchor="start" fill="#6caafc" font-size="8">carga del condensador</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Componente</th><th>Conexión</th></tr>
+        <tr><td>LDR extremo 1</td><td class="pin-raspi">3.3V</td></tr>
+        <tr><td>LDR extremo 2</td><td class="pin-signal">Nodo central → GPIO</td></tr>
+        <tr><td>Condensador +</td><td class="pin-signal">Nodo central</td></tr>
+        <tr><td>Condensador −</td><td class="pin-gnd">GND</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Principio:</strong> La Raspi no tiene ADC. Se mide el tiempo que tarda el condensador en cargarse (RC). Como LDR varía su resistencia con la luz, el tiempo de carga varía — así se obtiene valor analógico de luminosidad.
+      </div>
+      <div class="nota">
+        Condensador típico: <strong>1µF</strong>. Descarga el GPIO a GND, luego pon el pin como entrada y mide cuánto tarda en subir a HIGH.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 7. CO2 -->
+<div class="section" id="co2">
+  <div class="section-header">
+    <h2>7. Sensor CO₂ (UART)</h2>
+    <div style="display:flex;gap:0.5rem">
+      <span class="badge badge-uart">UART</span>
+      <span class="badge badge-pila">pila</span>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <!-- sensor -->
+        <rect x="120" y="30" width="80" height="90" rx="6" fill="#1e1e28" stroke="#e8a020" stroke-width="1.5"/>
+        <text x="160" y="52" text-anchor="middle" fill="#e8a020" font-size="9">Sensor CO₂</text>
+        <!-- pines -->
+        <line x1="100" y1="65" x2="120" y2="65" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="100" y1="80" x2="120" y2="80" stroke="#555577" stroke-width="1.5"/>
+        <line x1="100" y1="95" x2="120" y2="95" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="100" y1="110" x2="120" y2="110" stroke="#6caafc" stroke-width="1.5"/>
+        <text x="95" y="68" text-anchor="end" fill="#c93a6e" font-size="8">VCC (5V pila)</text>
+        <text x="95" y="83" text-anchor="end" fill="#8888aa" font-size="8">GND</text>
+        <text x="95" y="98" text-anchor="end" fill="#6cfcb8" font-size="8">TXD → GPIO15(RX)</text>
+        <text x="95" y="113" text-anchor="end" fill="#6caafc" font-size="8">RXD ← GPIO14(TX)</text>
+        <!-- cruce TX/RX -->
+        <text x="160" y="130" text-anchor="middle" fill="#555577" font-size="8">quien habla TX → otro escucha RX</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin Sensor</th><th>Destino</th></tr>
+        <tr><td>VCC</td><td class="pin-pila">5V pila (consume bastante)</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND común</td></tr>
+        <tr><td>TXD</td><td class="pin-signal2">GPIO15 (RX de la Raspi)</td></tr>
+        <tr><td>RXD</td><td class="pin-signal">GPIO14 (TX de la Raspi)</td></tr>
+        <tr><td>3.3V</td><td class="pin-raspi">3.3V Raspi (ref. lógica)</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Regla UART:</strong> TX del sensor → RX de la Raspi y viceversa. "El que habla (TX) conecta al que escucha (RX)."
+      </div>
+      <div class="nota">
+        <strong>Pila:</strong> necesita alimentación externa porque su consumo supera los límites de la Raspi.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 8. CÁMARA IR -->
+<div class="section" id="camara">
+  <div class="section-header">
+    <h2>8. Cámara Infrarroja</h2>
+    <span class="badge badge-i2c">I2C</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="140" viewBox="0 0 220 140">
+        <rect x="60" y="30" width="100" height="80" rx="8" fill="#1e1e28" stroke="#6caafc" stroke-width="1.5"/>
+        <circle cx="110" cy="70" r="22" fill="#2a2a38" stroke="#6cfcb8" stroke-width="1.5"/>
+        <circle cx="110" cy="70" r="10" fill="#17171e" stroke="#fcc96c" stroke-width="1"/>
+        <text x="110" y="74" text-anchor="middle" fill="#fcc96c" font-size="8">IR</text>
+        <text x="110" y="122" text-anchor="middle" fill="#8888aa" font-size="8">I2C (comparte bus con acelerómetro)</text>
+        <!-- pines -->
+        <line x1="72" y1="110" x2="72" y2="125" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="90" y1="110" x2="90" y2="125" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="108" y1="110" x2="108" y2="125" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="126" y1="110" x2="126" y2="125" stroke="#555577" stroke-width="1.5"/>
+        <text x="72" y="135" text-anchor="middle" fill="#c93a6e" font-size="7">3-6V</text>
+        <text x="90" y="135" text-anchor="middle" fill="#6cfcb8" font-size="7">SDA</text>
+        <text x="108" y="135" text-anchor="middle" fill="#6caafc" font-size="7">SCL</text>
+        <text x="126" y="135" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin</th><th>Destino</th></tr>
+        <tr><td>VCC</td><td class="pin-raspi">3.3V Raspi (algunos 5V)</td></tr>
+        <tr><td>SDA</td><td class="pin-signal">GPIO2 (SDA)</td></tr>
+        <tr><td>SCL</td><td class="pin-signal2">GPIO3 (SCL)</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Bus I2C compartido:</strong> La cámara IR y el acelerómetro (MPU-6050) pueden compartir los mismos pines GPIO2/GPIO3 siempre que tengan direcciones I2C distintas.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 9. TyH -->
+<div class="section" id="tyh">
+  <div class="section-header">
+    <h2>9. Sensor Temperatura y Humedad (DHT22)</h2>
+    <span class="badge badge-gpio">GPIO</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <!-- sensor -->
+        <rect x="70" y="30" width="80" height="100" rx="6" fill="#1e1e28" stroke="#6cfcb8" stroke-width="1.5"/>
+        <text x="110" y="52" text-anchor="middle" fill="#6cfcb8" font-size="9">DHT22</text>
+        <!-- 4 pines -->
+        <line x1="82" y1="130" x2="82" y2="145" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="96" y1="130" x2="96" y2="145" stroke="#fcc96c" stroke-width="1.5"/>
+        <line x1="110" y1="130" x2="110" y2="145" stroke="#555577" stroke-width="1.5"/>
+        <line x1="124" y1="130" x2="124" y2="145" stroke="#555577" stroke-width="1.5"/>
+        <text x="82" y="148" text-anchor="middle" fill="#c93a6e" font-size="7">VCC</text>
+        <text x="96" y="148" text-anchor="middle" fill="#fcc96c" font-size="7">DATA</text>
+        <text x="110" y="148" text-anchor="middle" fill="#8888aa" font-size="7">NC</text>
+        <text x="124" y="148" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+        <!-- resistencia pull-up -->
+        <line x1="82" y1="30" x2="82" y2="15" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="96" y1="30" x2="96" y2="15" stroke="#fcc96c" stroke-width="1.5"/>
+        <rect x="155" y="5" width="40" height="14" rx="3" fill="#17171e" stroke="#fc6c8f" stroke-width="1.5"/>
+        <text x="175" y="15" text-anchor="middle" fill="#fc6c8f" font-size="8">4.7kΩ</text>
+        <line x1="82" y1="15" x2="155" y2="12" stroke="#c93a6e" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="96" y1="15" x2="155" y2="12" stroke="#fcc96c" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="175" y="3" text-anchor="middle" fill="#fc6c8f" font-size="7">pull-up</text>
+        <text x="175" y="27" text-anchor="middle" fill="#fc6c8f" font-size="7">VCC↔DATA</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin</th><th>Destino</th></tr>
+        <tr><td>1 VCC</td><td class="pin-raspi">3.3V Raspi</td></tr>
+        <tr><td>2 DATA</td><td class="pin-signal">GPIO cualquiera</td></tr>
+        <tr><td>3 NC</td><td class="pin-gnd">No conectar</td></tr>
+        <tr><td>4 GND</td><td class="pin-gnd">GND Raspi</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Resistencia pull-up 4.7kΩ</strong> entre VCC y DATA (no entre DATA y GND). Sin ella la línea DATA queda flotante.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 10. NFC -->
+<div class="section" id="nfc">
+  <div class="section-header">
+    <h2>10. NFC (RC522)</h2>
+    <span class="badge badge-spi">SPI</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="160" viewBox="0 0 220 160">
+        <rect x="60" y="20" width="100" height="110" rx="6" fill="#1e1e28" stroke="#6cfcb8" stroke-width="1.5"/>
+        <text x="110" y="42" text-anchor="middle" fill="#6cfcb8" font-size="9">RC522</text>
+        <text x="110" y="55" text-anchor="middle" fill="#555577" font-size="7">NFC / RFID</text>
+        <!-- pines -->
+        <line x1="40" y1="70" x2="60" y2="70" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="40" y1="83" x2="60" y2="83" stroke="#555577" stroke-width="1.5"/>
+        <line x1="40" y1="96" x2="60" y2="96" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="40" y1="109" x2="60" y2="109" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="40" y1="120" x2="60" y2="120" stroke="#fcc96c" stroke-width="1.5"/>
+        <text x="35" y="73" text-anchor="end" fill="#c93a6e" font-size="7">3.3V</text>
+        <text x="35" y="86" text-anchor="end" fill="#8888aa" font-size="7">GND</text>
+        <text x="35" y="99" text-anchor="end" fill="#6cfcb8" font-size="7">MOSI→GPIO10</text>
+        <text x="35" y="112" text-anchor="end" fill="#6caafc" font-size="7">MISO→GPIO9</text>
+        <text x="35" y="123" text-anchor="end" fill="#fcc96c" font-size="7">SCK→GPIO11</text>
+        <line x1="160" y1="83" x2="180" y2="83" stroke="#fc6c8f" stroke-width="1.5"/>
+        <line x1="160" y1="96" x2="180" y2="96" stroke="#8888aa" stroke-width="1.5"/>
+        <text x="183" y="86" text-anchor="start" fill="#fc6c8f" font-size="7">NSS→GPIO8</text>
+        <text x="183" y="99" text-anchor="start" fill="#8888aa" font-size="7">Reset→GPIO</text>
+        <text x="110" y="145" text-anchor="middle" fill="#555577" font-size="7">NSS: GPIO8 (CE0) o GPIO7 (CE1)</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión SPI</h3>
+      <table class="pin-table">
+        <tr><th>Pin RC522</th><th>Destino Raspi</th></tr>
+        <tr><td>VCC</td><td class="pin-raspi">3.3V (¡no 5V!)</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND</td></tr>
+        <tr><td>MOSI</td><td class="pin-signal2">GPIO10 (MOSI)</td></tr>
+        <tr><td>MISO</td><td class="pin-signal">GPIO9 (MISO)</td></tr>
+        <tr><td>SCK</td><td class="pin-signal2">GPIO11 (SCLK)</td></tr>
+        <tr><td>NSS/SDA</td><td class="pin-pwm">GPIO8 (CE0) o GPIO7 (CE1)</td></tr>
+        <tr><td>RST</td><td class="pin-signal">GPIO cualquiera</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Importante:</strong> el RC522 es de 3.3V — conectarlo a 5V lo destruye. Hay que activar SPI en Raspi con <code>raspi-config</code>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 11. DISPLAY -->
+<div class="section" id="display">
+  <div class="section-header">
+    <h2>11. Display OLED (SSD1306)</h2>
+    <span class="badge badge-i2c">I2C</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <!-- display -->
+        <rect x="55" y="20" width="110" height="70" rx="6" fill="#0a0a14" stroke="#7c6cfc" stroke-width="2"/>
+        <rect x="63" y="27" width="94" height="56" rx="3" fill="#1a1a30" stroke="#7c6cfc" stroke-width="0.5"/>
+        <text x="110" y="53" text-anchor="middle" fill="#7c6cfc" font-size="8">OLED 128×64</text>
+        <text x="110" y="66" text-anchor="middle" fill="#444466" font-size="7">SSD1306</text>
+        <!-- pines -->
+        <line x1="75" y1="90" x2="75" y2="110" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="92" y1="90" x2="92" y2="110" stroke="#555577" stroke-width="1.5"/>
+        <line x1="109" y1="90" x2="109" y2="110" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="126" y1="90" x2="126" y2="110" stroke="#6caafc" stroke-width="1.5"/>
+        <text x="75" y="122" text-anchor="middle" fill="#c93a6e" font-size="8">VCC</text>
+        <text x="92" y="122" text-anchor="middle" fill="#8888aa" font-size="8">GND</text>
+        <text x="109" y="122" text-anchor="middle" fill="#6cfcb8" font-size="8">SCL</text>
+        <text x="126" y="122" text-anchor="middle" fill="#6caafc" font-size="8">SDA</text>
+        <text x="75" y="133" text-anchor="middle" fill="#c93a6e" font-size="7">3.3V</text>
+        <text x="92" y="133" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+        <text x="109" y="133" text-anchor="middle" fill="#6cfcb8" font-size="7">GPIO3</text>
+        <text x="126" y="133" text-anchor="middle" fill="#6caafc" font-size="7">GPIO2</text>
+        <text x="110" y="148" text-anchor="middle" fill="#555577" font-size="7">dir. I2C: 0x3C o 0x3D</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Pin Display</th><th>Destino</th></tr>
+        <tr><td>VCC</td><td class="pin-raspi">3.3V Raspi</td></tr>
+        <tr><td>GND</td><td class="pin-gnd">GND</td></tr>
+        <tr><td>SCL</td><td class="pin-signal2">GPIO3 (SCL) — mismo bus I2C</td></tr>
+        <tr><td>SDA</td><td class="pin-signal">GPIO2 (SDA) — mismo bus I2C</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Bus compartido:</strong> El display y el acelerómetro comparten GPIO2/GPIO3. Dirección I2C del display suele ser <strong>0x3C</strong>. Verificar con <code>i2cdetect -y 1</code>.
+      </div>
+      <div class="nota">
+        <strong>Librería Python:</strong> <code>luma.oled</code> o <code>adafruit-circuitpython-ssd1306</code>. El acelerómetro genera el dato y el display lo muestra — por eso el enunciado los vincula.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 12. SERVO -->
+<div class="section" id="servo">
+  <div class="section-header">
+    <h2>12. Servomotor (dirección)</h2>
+    <div style="display:flex;gap:0.5rem">
+      <span class="badge badge-pwm">PWM</span>
+      <span class="badge badge-pila">pila recomendado</span>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="160" viewBox="0 0 220 160">
+        <!-- servo body -->
+        <rect x="65" y="30" width="90" height="70" rx="8" fill="#1e1e28" stroke="#fc6c8f" stroke-width="1.5"/>
+        <rect x="85" y="20" width="50" height="16" rx="4" fill="#2a1525" stroke="#fc6c8f" stroke-width="1"/>
+        <circle cx="110" cy="28" r="8" fill="#17171e" stroke="#fc6c8f" stroke-width="1.5"/>
+        <text x="110" y="32" text-anchor="middle" fill="#fc6c8f" font-size="7">eje</text>
+        <text x="110" y="68" text-anchor="middle" fill="#fc6c8f" font-size="9">SERVO</text>
+        <text x="110" y="82" text-anchor="middle" fill="#555577" font-size="7">dirección vehículo</text>
+        <!-- 3 cables -->
+        <line x1="82" y1="100" x2="82" y2="125" stroke="#555577" stroke-width="2"/>
+        <line x1="100" y1="100" x2="100" y2="125" stroke="#c93a6e" stroke-width="2"/>
+        <line x1="118" y1="100" x2="118" y2="125" stroke="#fcc96c" stroke-width="2"/>
+        <text x="82" y="138" text-anchor="middle" fill="#8888aa" font-size="8">marrón</text>
+        <text x="100" y="138" text-anchor="middle" fill="#c93a6e" font-size="8">rojo</text>
+        <text x="118" y="138" text-anchor="middle" fill="#fcc96c" font-size="8">naranja</text>
+        <text x="82" y="150" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+        <text x="100" y="150" text-anchor="middle" fill="#c93a6e" font-size="7">VCC 5V</text>
+        <text x="118" y="150" text-anchor="middle" fill="#fcc96c" font-size="7">PWM GPIO</text>
+        <!-- PWM pulses indicative -->
+        <text x="175" y="50" text-anchor="middle" fill="#8888aa" font-size="7">1ms=−90°</text>
+        <text x="175" y="62" text-anchor="middle" fill="#fc6c8f" font-size="7">1.5ms= 0°</text>
+        <text x="175" y="74" text-anchor="middle" fill="#8888aa" font-size="7">2ms=+90°</text>
+        <text x="175" y="86" text-anchor="middle" fill="#555577" font-size="7">cada 20ms</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Conexión</h3>
+      <table class="pin-table">
+        <tr><th>Cable</th><th>Destino</th></tr>
+        <tr><td>Marrón / Negro</td><td class="pin-gnd">GND</td></tr>
+        <tr><td>Rojo</td><td class="pin-pila">5V pila (o 5V Raspi si es pequeño)</td></tr>
+        <tr><td>Naranja / Amarillo</td><td class="pin-pwm">GPIO13, 19, 18 o 12 (PWM)</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Control por PWM:</strong> señal de 50Hz (periodo 20ms). El ancho del pulso define el ángulo: 1ms = −90°, 1.5ms = 0° (centro), 2ms = +90°.
+      </div>
+      <div class="nota">
+        <strong>Para el coche:</strong> centro = recto, girar el pulso hacia 1ms o 2ms para girar las ruedas. Con <code>gpiozero.Servo()</code> es muy directo.
+      </div>
+      <div class="nota">
+        <strong>Pila:</strong> recomendable alimentación externa si hay más carga en la Raspi — un servo puede pedir 500–800mA en movimiento.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 13. MOTOR DC -->
+<div class="section" id="motor">
+  <div class="section-header">
+    <h2>13. Motor DC (L293D)</h2>
+    <div style="display:flex;gap:0.5rem">
+      <span class="badge badge-gpio">GPIO</span>
+      <span class="badge badge-pwm">PWM</span>
+      <span class="badge badge-pila">pila</span>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-col">
+      <svg width="220" height="200" viewBox="0 0 220 200">
+        <!-- Raspi -->
+        <rect x="5" y="20" width="50" height="100" rx="5" fill="#2a0d1a" stroke="#c93a6e" stroke-width="1"/>
+        <text x="30" y="40" text-anchor="middle" fill="#c93a6e" font-size="8">Raspi</text>
+        <text x="30" y="60" text-anchor="middle" fill="#c93a6e" font-size="7">Enable</text>
+        <text x="30" y="73" text-anchor="middle" fill="#6caafc" font-size="7">IN1</text>
+        <text x="30" y="86" text-anchor="middle" fill="#6caafc" font-size="7">IN2</text>
+        <text x="30" y="99" text-anchor="middle" fill="#c93a6e" font-size="7">3.3V</text>
+        <text x="30" y="112" text-anchor="middle" fill="#8888aa" font-size="7">GND</text>
+        <!-- L293D -->
+        <rect x="75" y="10" width="70" height="150" rx="6" fill="#1e1e28" stroke="#6cfcb8" stroke-width="1.5"/>
+        <text x="110" y="32" text-anchor="middle" fill="#6cfcb8" font-size="9">L293D</text>
+        <text x="110" y="95" text-anchor="middle" fill="#555577" font-size="7">Vcc1 ← 3.3V</text>
+        <text x="110" y="108" text-anchor="middle" fill="#e8a020" font-size="7">Vcc2 ← pila</text>
+        <text x="110" y="121" text-anchor="middle" fill="#8888aa" font-size="7">GND común</text>
+        <!-- cables Raspi → L293D -->
+        <line x1="55" y1="58" x2="75" y2="58" stroke="#fc6c8f" stroke-width="1.5"/>
+        <line x1="55" y1="71" x2="75" y2="71" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="55" y1="84" x2="75" y2="84" stroke="#6caafc" stroke-width="1.5"/>
+        <line x1="55" y1="97" x2="75" y2="97" stroke="#c93a6e" stroke-width="1.5"/>
+        <line x1="55" y1="110" x2="75" y2="110" stroke="#555577" stroke-width="1.5"/>
+        <!-- Pilas -->
+        <rect x="150" y="10" width="60" height="40" rx="5" fill="#2a1d00" stroke="#e8a020" stroke-width="1"/>
+        <text x="180" y="28" text-anchor="middle" fill="#e8a020" font-size="8">Pilas</text>
+        <text x="180" y="40" text-anchor="middle" fill="#e8a020" font-size="7">4.5–6V</text>
+        <!-- cable pila + → Vcc2 -->
+        <line x1="150" y1="25" x2="145" y2="25" stroke="#e8a020" stroke-width="1.5"/>
+        <line x1="145" y1="25" x2="145" y2="105" stroke="#e8a020" stroke-width="1.5"/>
+        <line x1="145" y1="105" x2="145" y2="105" stroke="#e8a020" stroke-width="1.5"/>
+        <!-- Motor -->
+        <rect x="155" y="80" width="55" height="50" rx="6" fill="#1e1e28" stroke="#6cfcb8" stroke-width="1.5"/>
+        <text x="182" y="108" text-anchor="middle" fill="#6cfcb8" font-size="8">Motor DC</text>
+        <!-- cables L293D → Motor (Out1, Out2) -->
+        <line x1="145" y1="60" x2="182" y2="80" stroke="#6cfcb8" stroke-width="1.5"/>
+        <line x1="145" y1="72" x2="182" y2="80" stroke="#6cfcb8" stroke-width="1.5"/>
+        <!-- GND común -->
+        <line x1="30" y1="120" x2="30" y2="175" stroke="#555577" stroke-width="1.5"/>
+        <line x1="30" y1="175" x2="180" y2="175" stroke="#555577" stroke-width="2"/>
+        <line x1="180" y1="175" x2="180" y2="130" stroke="#555577" stroke-width="1.5"/>
+        <line x1="110" y1="160" x2="110" y2="175" stroke="#555577" stroke-width="1.5"/>
+        <text x="105" y="190" text-anchor="middle" fill="#8888aa" font-size="8">GND COMÚN</text>
+      </svg>
+    </div>
+    <div class="info-col">
+      <h3>Dos alimentaciones separadas</h3>
+      <table class="pin-table">
+        <tr><th>Pin L293D</th><th>Destino</th></tr>
+        <tr><td>Vcc1 (16)</td><td class="pin-raspi">3.3V o 5V Raspi (lógica)</td></tr>
+        <tr><td>Vcc2 (8)</td><td class="pin-pila">+ Pilas (potencia motor)</td></tr>
+        <tr><td>Enable (1 o 9)</td><td class="pin-pwm">GPIO PWM (velocidad)</td></tr>
+        <tr><td>Input A</td><td class="pin-signal">GPIO (dirección)</td></tr>
+        <tr><td>Input B</td><td class="pin-signal">GPIO (dirección)</td></tr>
+        <tr><td>Out1 + Out2</td><td class="pin-signal2">Terminales motor</td></tr>
+        <tr><td>GND (4,5)</td><td class="pin-gnd">GND común Raspi + pilas</td></tr>
+      </table>
+      <div class="nota">
+        <strong>Vcc1 ≠ Vcc2:</strong> son circuitos internos distintos. No son intercambiables.
+      </div>
+      <div class="nota">
+        <strong>Tabla de verdad IN1/IN2:</strong> HIGH/LOW = adelante · LOW/HIGH = atrás · igual = freno.
+      </div>
+      <div class="nota">
+        <strong>GND común obligatorio</strong> entre Raspi y pilas — sin él el chip no interpreta bien los niveles lógicos.
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer style="text-align:center;padding:2rem;color:var(--muted);font-size:0.8rem;border-top:1px solid var(--border);margin-top:2rem;">
+  Raspberry Pi · IoT Sensores y Actuadores
+</footer>
+
+</body>
+</html>
