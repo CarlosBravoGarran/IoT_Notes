@@ -285,14 +285,14 @@
     <div class="key-box">
       <div class="key-box-label">características clave de MQTT</div>
       <ul>
-        <li>Protocolo pub/sub sobre <strong>TCP/IP</strong></li>
+        <li>Protocolo pub/sub sobre TCP/IP</li>
         <li>Orientado a conexión (cliente ↔ broker primero)</li>
-        <li>Cabecera fija de solo <strong>2 bytes</strong></li>
-        <li>Payload máximo: <strong>256 MB</strong> (en práctica limitado por broker)</li>
+        <li>Cabecera fija de solo 2 bytes</li>
+        <li>Payload máximo: 256 MB (en práctica limitado por broker)</li>
         <li>Independiente del formato de datos (JSON, binario, texto…)</li>
         <li>Creado por IBM en 1993 para oleoductos remotos vía satélite</li>
         <li>Estándar OASIS desde 2013, ISO/IEC 20922</li>
-        <li>Escala a <strong>millones de mensajes/hora</strong> y decenas de miles de editores</li>
+        <li>Escala a millones de mensajes/hora y decenas de miles de editores</li>
       </ul>
     </div>
 
@@ -302,18 +302,18 @@
       <div class="mqtt-flow-label">Arquitectura MQTT — broker central</div>
 
       <div class="flow-row">
-        <span class="flow-node">Sensor 1 (Publisher)</span>
+        <span class="flow-node">Sensor 1 (Pub)</span>
         <span class="flow-arrow">──PUBLISH "temperatura/sala"──▶</span>
         <span class="flow-broker">MQTT Broker</span>
         <span class="flow-arrow">──▶</span>
-        <span class="flow-node">App Dashboard (Subscriber)</span>
+        <span class="flow-node">App Dashboard (Sub)</span>
       </div>
       <div class="flow-row">
-        <span class="flow-node">Sensor 2 (Publisher)</span>
+        <span class="flow-node">Sensor 2 (Pub)</span>
         <span class="flow-arrow">──PUBLISH "humedad/sala"──────▶</span>
         <span class="flow-broker">MQTT Broker</span>
         <span class="flow-arrow">──▶</span>
-        <span class="flow-node">Base de datos (Subscriber)</span>
+        <span class="flow-node">Base de datos (Sub)</span>
       </div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(242,245,240,0.5);margin-top:0.75rem;">
         El broker filtra mensajes por topic y los reenvía solo a los suscriptores interesados.<br>

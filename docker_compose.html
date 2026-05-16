@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Compose Chuleta</title>
+  <style>
+    :root {
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --color-text-primary: #111827;
+      --color-text-secondary: #4b5563;
+      --color-text-tertiary: #6b7280;
+      --color-background-primary: #f8fafc;
+      --color-background-secondary: #eef2ff;
+      --color-border-primary: #d1d5db;
+      --color-border-secondary: #e5e7eb;
+      --color-border-tertiary: #d1d5db;
+      --border-radius-md: 12px;
+      --border-radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: var(--font-sans);
+      background: #f8fafc;
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      padding: 1rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .sheet { max-width: 980px; margin: 0 auto; padding: 1rem 0; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab { padding: 6px 14px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; background: transparent; color: var(--color-text-secondary); font-family: var(--font-sans); }
+    .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .section-title { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-sans); }
+
+    .code-block { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 14px; font-size: 12.5px; line-height: 1.7; font-family: var(--font-mono); color: var(--color-text-primary); margin-bottom: 1rem; overflow-x: auto; white-space: pre-wrap; }
+
+    .kw { color: #7F77DD; }
+    .val { color: #1D9E75; }
+    .cm { color: var(--color-text-tertiary); font-style: italic; }
+    .warn { color: #D85A30; }
+    .ok { color: #639922; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 14px; }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; font-family: var(--font-sans); }
+    .card-body { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; font-family: var(--font-sans); }
+
+    .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-family: var(--font-sans); font-weight: 500; margin-right: 4px; margin-bottom: 4px; }
+    .pill-green { background: #EAF3DE; color: #3B6D11; }
+    .pill-amber { background: #FAEEDA; color: #854F0B; }
+    .pill-red { background: #FCEBEB; color: #A32D2D; }
+    .pill-blue { background: #E6F1FB; color: #185FA5; }
+    .pill-purple { background: #EEEDFE; color: #534AB7; }
+
+    .flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; font-family: var(--font-sans); }
+    .flow-box { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 4px 10px; color: var(--color-text-primary); font-size: 12px; }
+    .flow-arrow { color: var(--color-text-tertiary); font-size: 14px; }
+    .flow-box.ok-box { background: #EAF3DE; border-color: #97C459; color: #3B6D11; }
+    .flow-box.warn-box { background: #FAEEDA; border-color: #EF9F27; color: #854F0B; }
+    .flow-box.err-box { background: #FCEBEB; border-color: #F09595; color: #A32D2D; }
+
+    .row-label { font-size: 11px; color: var(--color-text-tertiary); font-family: var(--font-sans); margin-bottom: 4px; }
+
+    .tip { background: #E6F1FB; border-left: 3px solid #378ADD; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: 8px 12px; font-size: 12px; color: #185FA5; font-family: var(--font-sans); margin-bottom: 10px; line-height: 1.6; }
+    .tip-warn { background: #FAEEDA; border-left-color: #EF9F27; color: #854F0B; }
+    .tip-ok { background: #EAF3DE; border-left-color: #639922; color: #3B6D11; }
+
+    .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1rem 0; }
+
+    table.ref { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-sans); margin-bottom: 1rem; }
+    table.ref th { text-align: left; font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); padding: 4px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+    table.ref td { padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); vertical-align: top; line-height: 1.5; }
+    table.ref td:first-child { font-family: var(--font-mono); font-size: 12px; color: #7F77DD; white-space: nowrap; }
+    table.ref tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<h2 class="sr-only">Chuleta interactiva de Docker Compose: estructura, patrones y orden de arranque</h2>
+
+<div class="sheet">
+  <div class="tabs">
+    <button class="tab active" onclick="show('estructura', this)">Estructura</button>
+    <button class="tab" onclick="show('orden', this)">Orden de arranque</button>
+    <button class="tab" onclick="show('redes', this)">Redes y puertos</button>
+    <button class="tab" onclick="show('patrones', this)">Patrones</button>
+    <button class="tab" onclick="show('referencia', this)">Referencia rápida</button>
+  </div>
+
+  <div id="estructura" class="panel active">
+    <div class="section-title">Anatomía de un servicio</div>
+    <div class="code-block"><span class="kw">services</span>:
+  <span class="kw">mi_servicio</span>:
+    <span class="kw">build</span>: <span class="val">./mi_servicio</span>           <span class="cm"># construye desde Dockerfile</span>
+    <span class="kw">image</span>: <span class="val">ubuntu:22.04</span>           <span class="cm"># O usa imagen directamente</span>
+    <span class="kw">ports</span>:
+      - <span class="val">"5000:5000"</span>                  <span class="cm"># host:contenedor</span>
+    <span class="kw">environment</span>:
+      - <span class="val">HOST=0.0.0.0</span>
+      - <span class="val">PORT=5000</span>
+    <span class="kw">networks</span>:
+      - <span class="val">mi-red</span>
+    <span class="kw">volumes</span>:
+      - <span class="val">"./code:/etc/usr/src/app"</span>   <span class="cm"># host:contenedor</span>
+    <span class="kw">depends_on</span>:
+      mi_db:
+        <span class="kw">condition</span>: <span class="val">service_healthy</span>
+    <span class="kw">restart</span>: <span class="val">unless-stopped</span>
+
+<span class="kw">networks</span>:
+  <span class="kw">mi-red</span>:
+    <span class="kw">driver</span>: <span class="val">bridge</span>              <span class="cm"># red nueva (solo en un compose)</span>
+  <span class="kw">otra-red</span>:
+    <span class="kw">external</span>: <span class="val">true</span>              <span class="cm"># red ya existente (otros composes)</span></div>
+
+    <div class="tip"><strong>Truco build vs image:</strong> usa <code>build</code> para tu propio código (con Dockerfile), <code>image</code> para imágenes externas como MySQL, Mosquitto, Nginx.</div>
+
+    <div class="section-title">Healthcheck — cuándo está "listo" un servicio</div>
+    <div class="code-block">  <span class="kw">healthcheck</span>:
+    <span class="kw">test</span>: <span class="val">["CMD", "healthcheck.sh", "--connect"]</span>
+    <span class="kw">start_period</span>: <span class="val">10s</span>   <span class="cm"># tiempo de gracia al arrancar</span>
+    <span class="kw">interval</span>: <span class="val">10s</span>       <span class="cm"># cada cuánto se comprueba</span>
+    <span class="kw">timeout</span>: <span class="val">5s</span>         <span class="cm"># tiempo máximo por comprobación</span>
+    <span class="kw">retries</span>: <span class="val">3</span>           <span class="cm"># fallos antes de marcar unhealthy</span></div>
+
+    <div class="tip tip-warn"><strong>Ojo:</strong> <code>ports</code> expone al host. <code>expose</code> solo es visible entre contenedores de la misma red — no al exterior.</div>
+  </div>
+
+  <div id="orden" class="panel">
+    <div class="section-title">Las 3 condiciones de depends_on</div>
+    <div class="grid3">
+      <div class="card">
+        <div class="card-title"><span class="pill pill-amber">service_started</span></div>
+        <div class="card-body">El contenedor <strong>ha arrancado</strong>, pero puede que el proceso interno aún no esté listo.<br><br>Usar para: Mosquitto, servicios sin BD.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-blue">service_healthy</span></div>
+        <div class="card-body">El contenedor <strong>pasa el healthcheck</strong>. Garantiza que el servicio está operativo.<br><br>Usar para: MySQL, PostgreSQL, cualquier BD.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-green">service_completed_successfully</span></div>
+        <div class="card-body">El contenedor <strong>terminó con código 0</strong>. Para tareas de inicialización o migraciones.<br><br>Usar para: scripts de setup, db-init.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Orden típico en un microservicio con BD</div>
+    <div class="flow">
+      <div class="flow-box warn-box">BD arranca</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box warn-box">healthcheck pasa</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok-box">microservicio arranca</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok-box">conecta a BD</div>
+    </div>
+    <div class="flow">
+      <div class="flow-box warn-box">Mosquitto arranca</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok-box">Message Router arranca</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box ok-box">se conecta al broker</div>
+    </div>
+
+    <div class="code-block"><span class="cm"># Ejemplo: microservicio que espera a que la BD esté healthy</span>
+<span class="kw">depends_on</span>:
+  <span class="kw">dbservice</span>:
+    <span class="kw">condition</span>: <span class="val">service_healthy</span>
+
+<span class="cm"># Ejemplo: varios depends_on</span>
+<span class="kw">depends_on</span>:
+  <span class="kw">mosquitto</span>:
+    <span class="kw">condition</span>: <span class="val">service_started</span>
+  <span class="kw">dbservice</span>:
+    <span class="kw">condition</span>: <span class="val">service_healthy</span></div>
+
+    <div class="tip tip-warn"><strong>Error clásico:</strong> usar <code>service_started</code> para MySQL. El contenedor arranca en segundos pero MySQL tarda 10-30s en estar listo. Sin <code>service_healthy</code> + healthcheck el microservicio intenta conectar antes de tiempo y falla.</div>
+    <div class="tip"><strong>Truco:</strong> si no controlas el Dockerfile del servicio (imagen externa), define el healthcheck en el compose con <code>test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]</code>.</div>
+  </div>
+
+  <div id="redes" class="panel">
+    <div class="section-title">Red nueva vs red externa</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Crear red (<code>driver: bridge</code>)</div>
+        <div class="card-body">Solo en <strong>un</strong> compose. Este compose es el "dueño" de la red.<br><br>
+        <div class="code-block" style="margin-bottom:0"><span class="kw">networks</span>:
+  <span class="kw">fic-services</span>:
+    <span class="kw">driver</span>: <span class="val">bridge</span></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Unirse a red externa (<code>external: true</code>)</div>
+        <div class="card-body">En el <strong>resto</strong> de composes. Se unen a la red ya creada.<br><br>
+        <div class="code-block" style="margin-bottom:0"><span class="kw">networks</span>:
+  <span class="kw">fic-services</span>:
+    <span class="kw">external</span>: <span class="val">true</span></div></div>
+      </div>
+    </div>
+
+    <div class="tip tip-warn"><strong>Orden de arranque entre composes:</strong> el compose que crea la red debe arrancarse <strong>primero</strong>. Si arrancas un compose con <code>external: true</code> antes de que exista la red, falla.</div>
+
+    <div class="section-title">Puertos — regla de los conflictos</div>
+    <div class="tip"><strong>Truco para múltiples BDs:</strong> todas las instancias MySQL escuchan en el puerto interno 3306, pero el puerto del host debe ser único en toda la máquina.</div>
+    <div class="code-block"><span class="cm"># sessions DB</span>
+<span class="kw">ports</span>: - <span class="val">"3306:3306"</span>
+
+<span class="cm"># telemetry DB  → puerto host distinto</span>
+<span class="kw">ports</span>: - <span class="val">"3307:3306"</span>
+
+<span class="cm"># devices DB    → puerto host distinto</span>
+<span class="kw">ports</span>: - <span class="val">"3308:3306"</span></div>
+
+    <div class="section-title">Comunicación entre servicios</div>
+    <div class="tip tip-ok">Dentro de la misma red Docker, los contenedores se referencian por <strong>nombre de servicio</strong>, no por IP. Si el servicio se llama <code>mosquitto</code>, la dirección es <code>mosquitto:1883</code>. Por eso las variables de entorno usan nombres como <code>MQTT_SERVER_ADDRESS=mosquitto</code>.</div>
+  </div>
+
+  <div id="patrones" class="panel">
+    <div class="section-title">Los 3 patrones del examen</div>
+    <div class="grid3" style="margin-bottom:1.5rem">
+      <div class="card">
+        <div class="card-title"><span class="pill pill-purple">Base de datos por servicio</span></div>
+        <div class="card-body">Cada microservicio tiene su propia BD. Nadie accede a la BD de otro directamente — solo a través de su API.<br><br>Resultado: un compose por microservicio, cada uno con su dbservice.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-blue">Backend for Frontends</span></div>
+        <div class="card-body">El frontend no habla directamente con los microservicios. Hay un backend intermedio (<code>webapp_backend</code>) que agrega y adapta las llamadas.<br><br>Resultado: compose del frontend con dos servicios: backend + frontend.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-green">Paso de mensajes</span></div>
+        <div class="card-body">Los dispositivos no llaman directamente a los microservicios. Se comunican a través de un broker de mensajes (Mosquitto/MQTT).<br><br>Resultado: Message Router como intermediario entre MQTT y HTTP.</div>
+      </div>
+    </div>
+
+    <div class="section-title">División de ficheros compose en este proyecto</div>
+    <div class="code-block"><span class="cm"># compose 1 — crea la red (dueño de fic-services)</span>
+docker-compose-message-router.yml
+  └── mosquitto         <span class="ok"># broker MQTT</span>
+  └── message_router    <span class="ok"># intermediario MQTT↔HTTP</span>
+  └── <span class="warn">network fic-services (driver: bridge)  ← crea la red</span>
+
+<span class="cm"># compose 2 — se une a la red</span>
+docker-compose-sessions-microservice.yml
+  └── sessions_microservice
+  └── sessions-dbservice
+  └── <span class="val">network fic-services (external: true)</span>
+
+<span class="cm"># compose 3 — se une a la red</span>
+docker-compose-telemetry-microservice.yml
+  └── telemetry_microservice
+  └── telemetry-dbservice
+  └── <span class="val">network fic-services (external: true)</span>
+
+<span class="cm"># compose 4 — se une a la red</span>
+docker-compose-devices-microservice.yml
+  └── devices_microservice
+  └── devices-dbservice
+  └── <span class="val">network fic-services (external: true)</span>
+
+<span class="cm"># compose 5 — BFF, se une a la red</span>
+docker-compose-frontend.yml
+  └── webapp_backend    <span class="ok"># BFF</span>
+  └── webapp_frontend   <span class="ok"># Nginx/React</span>
+  └── <span class="val">network fic-services (external: true)</span></div>
+
+    <div class="tip"><strong>Orden de arranque entre composes:</strong> primero el message-router (crea la red), luego los microservicios, finalmente el frontend.</div>
+  </div>
+
+  <div id="referencia" class="panel">
+    <div class="section-title">Claves más importantes</div>
+    <table class="ref">
+      <tr><th>Clave</th><th>Para qué sirve</th><th>Cuándo usarla</th></tr>
+      <tr><td>build</td><td>Construir imagen desde Dockerfile local</td><td>Tu propio código</td></tr>
+      <tr><td>image</td><td>Usar imagen de Docker Hub</td><td>MySQL, Mosquitto, Nginx...</td></tr>
+      <tr><td>ports</td><td>Exponer puerto al host (host:contenedor)</td><td>Cuando necesitas acceso externo</td></tr>
+      <tr><td>expose</td><td>Documentar puerto interno (no expone al host)</td><td>Comunicación solo entre contenedores</td></tr>
+      <tr><td>environment</td><td>Variables de entorno del contenedor</td><td>Config, credenciales, direcciones</td></tr>
+      <tr><td>env_file</td><td>Cargar variables desde fichero .env</td><td>Muchas variables o secretos</td></tr>
+      <tr><td>volumes</td><td>Montar ruta del host en el contenedor</td><td>Código fuente, datos persistentes</td></tr>
+      <tr><td>networks</td><td>Redes a las que se une el servicio</td><td>Siempre que haya comunicación entre servicios</td></tr>
+      <tr><td>depends_on</td><td>Orden de arranque entre servicios</td><td>Cuando un servicio necesita otro</td></tr>
+      <tr><td>healthcheck</td><td>Determinar cuándo un servicio está listo</td><td>BDs, brokers, cualquier servicio con startup lento</td></tr>
+      <tr><td>restart</td><td>Política de reinicio automático</td><td>Producción: unless-stopped</td></tr>
+    </table>
+
+    <div class="section-title">Bugs típicos de examen</div>
+    <table class="ref">
+      <tr><th>Bug</th><th>Síntoma</th><th>Solución</th></tr>
+      <tr><td>network vs networks</td><td>Error de sintaxis en compose</td><td>Siempre <code>networks</code> (plural)</td></tr>
+      <tr><td>service_started para BD</td><td>Microservicio falla al conectar</td><td>Usar <code>service_healthy</code> + healthcheck</td></tr>
+      <tr><td>Puerto host duplicado</td><td>Error "port already allocated"</td><td>Cada BD con puerto host distinto (3306, 3307...)</td></tr>
+      <tr><td>external: true sin crear red</td><td>Error "network not found"</td><td>Arrancar primero el compose que crea la red</td></tr>
+      <tr><td>PORT env ≠ ports</td><td>Servicio inaccesible</td><td>El puerto en env debe coincidir con el mapeado</td></tr>
+      <tr><td>IP en lugar de nombre</td><td>Falla en otro entorno</td><td>Usar nombre de servicio como hostname</td></tr>
+    </table>
+
+    <div class="section-title">Comandos útiles</div>
+    <div class="code-block">docker compose -f docker-compose-message-router.yml up -d
+docker compose -f docker-compose-sessions-microservice.yml up -d
+docker compose logs -f mi_servicio
+docker compose ps
+docker compose down
+docker network ls                          <span class="cm"># ver redes creadas</span>
+docker compose -f compose1.yml -f compose2.yml up   <span class="cm"># combinar ficheros</span></div>
+  </div>
+</div>
+
+<script>
+function show(id, button) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (button) button.classList.add('active');
+}
+</script>
+</body>
+</html>
